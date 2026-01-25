@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L1 Windows Server Troubleshooting Guide v2.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #333; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 30px; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 40px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .version-badge { background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; display: inline-block; margin-top: 10px; }
+        .section { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .section h2 { color: #1e3c72; border-bottom: 3px solid #2a5298; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.5em; }
+        .section h3 { color: #2a5298; margin: 20px 0 15px 0; font-size: 1.2em; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 12px 15px; text-align: left; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; }
+        tr:nth-child(even) { background: #f8fafc; }
+        tr:hover { background: #e8f4fc; }
+        .code-block { background: #1e1e1e; color: #d4d4d4; padding: 15px 20px; border-radius: 8px; font-family: 'Consolas', 'Monaco', monospace; margin: 10px 0; overflow-x: auto; font-size: 14px; }
+        .code-inline { background: #e8f4fc; color: #1e3c72; padding: 2px 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 13px; }
+        .status-good { background: #d4edda; color: #155724; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: inline-block; }
+        .status-bad { background: #f8d7da; color: #721c24; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: inline-block; }
+        .status-warn { background: #fff3cd; color: #856404; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: inline-block; }
+        .alert { padding: 15px 20px; border-radius: 8px; margin: 15px 0; }
+        .alert-danger { background: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; }
+        .alert-warning { background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; }
+        .alert-info { background: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; }
+        .alert-success { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
+        .step-number { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
+        .step { display: flex; align-items: flex-start; margin: 15px 0; }
+        .step-content { flex: 1; }
+        ul { margin: 10px 0 10px 25px; }
+        li { margin: 8px 0; }
+        .toc { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .toc a { color: #2a5298; text-decoration: none; display: block; padding: 5px 0; }
+        .toc a:hover { color: #1e3c72; text-decoration: underline; }
+        .new-badge { background: #dc3545; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; margin-left: 10px; vertical-align: middle; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
+        @media print { .container { max-width: 100%; } .section { break-inside: avoid; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ L1 Windows Server Troubleshooting Guide</h1>
+            <p>Domain Connectivity & RDP Issues | Windows Server 2012 R2 - 2022</p>
+            <span class="version-badge">Version 2.0 - January 2026</span>
+        </div>
+
+        <div class="section toc">
+            <h2>📋 Table of Contents</h2>
+            <a href="#section1">1. Initial Assessment</a>
+            <a href="#section2">2. Common Error Messages</a>
+            <a href="#section3">3. Step-by-Step Troubleshooting</a>
+            <a href="#section4">4. Check Last Logged On Users <span class="new-badge">NEW</span></a>
+            <a href="#section5">5. Check Patch History & Errors <span class="new-badge">NEW</span></a>
+            <a href="#section6">6. Check Disk Space & Memory <span class="new-badge">NEW</span></a>
+            <a href="#section7">7. Check Pending Reboot <span class="new-badge">NEW</span></a>
+            <a href="#section8">8. Access Methods When RDP Fails</a>
+            <a href="#section9">9. Resolution Procedures</a>
+            <a href="#section10">10. Rejoin Server to Domain <span class="new-badge">NEW</span></a>
+            <a href="#section11">11. Escalation Criteria</a>
+            <a href="#section12">12. Quick Reference Commands</a>
+        </div>
+
+        <div class="section" id="section1">
+            <h2>1. Initial Assessment</h2>
+            <p>Before troubleshooting, gather the following information from the ticket:</p>
+            <table>
+                <tr><th>Information</th><th>Details to Collect</th></tr>
+                <tr><td><strong>Server Name/IP</strong></td><td>Hostname or IP address of affected server</td></tr>
+                <tr><td><strong>Domain Name</strong></td><td>Active Directory domain (e.g., corp.company.com)</td></tr>
+                <tr><td><strong>Error Message</strong></td><td>Exact error message user is seeing</td></tr>
+                <tr><td><strong>Last Working</strong></td><td>When did it last work correctly?</td></tr>
+                <tr><td><strong>Recent Changes</strong></td><td>Any recent patches, updates, or changes?</td></tr>
+                <tr><td><strong>Cloud Platform</strong></td><td>AWS, Azure, On-Premises, or Hybrid</td></tr>
+                <tr><td><strong>Last Patch Date</strong></td><td>When was the last Windows Update installed?</td></tr>
+            </table>
+        </div>
+
+        <div class="section" id="section2">
+            <h2>2. Common Error Messages & Quick Fixes</h2>
+            <table>
+                <tr><th>Error Message</th><th>Likely Cause</th></tr>
+                <tr>
+                    <td><span class="status-bad">The trust relationship between this workstation and the primary domain failed</span></td>
+                    <td>Computer account password out of sync with AD</td>
+                </tr>
+                <tr>
+                    <td><span class="status-bad">There are currently no logon servers available</span></td>
+                    <td>Cannot reach Domain Controller - DNS or network issue</td>
+                </tr>
+                <tr>
+                    <td><span class="status-warn">The remote computer requires Network Level Authentication</span></td>
+                    <td>NLA enabled but credentials cannot be verified</td>
+                </tr>
+                <tr>
+                    <td><span class="status-bad">Remote Desktop can't connect to the remote computer</span></td>
+                    <td>RDP disabled, firewall blocking, or service stopped</td>
+                </tr>
+                <tr>
+                    <td><span class="status-warn">The user name or password is incorrect</span></td>
+                    <td>Wrong credentials, locked account, or trust issue</td>
+                </tr>
+                <tr>
+                    <td><span class="status-bad">An authentication error has occurred</span></td>
+                    <td>Kerberos/time sync issue or NLA problem</td>
+                </tr>
+                <tr>
+                    <td><span class="status-bad">Logon Failed</span></td>
+                    <td>January 2026 Patch KB5073723 bug - Install KB5077795</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section" id="section3">
+            <h2>3. Step-by-Step Troubleshooting</h2>
+            
+            <h3>Step 3.1: Verify Basic Connectivity</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>Ping the server by IP address</strong>
+                    <div class="code-block">ping &lt;server-ip&gt;</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Ping the server by hostname</strong>
+                    <div class="code-block">ping &lt;server-hostname&gt;</div>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <strong>💡 Tip:</strong> If IP works but hostname fails = DNS issue
+            </div>
+
+            <h3>Step 3.2: Check Critical Ports</h3>
+            <p>Test connectivity to required ports using PowerShell:</p>
+            <table>
+                <tr><th>Port</th><th>Service</th><th>Test Command</th></tr>
+                <tr><td><strong>389</strong></td><td>LDAP</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 389</code></td></tr>
+                <tr><td><strong>636</strong></td><td>LDAPS</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 636</code></td></tr>
+                <tr><td><strong>88</strong></td><td>Kerberos</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 88</code></td></tr>
+                <tr><td><strong>53</strong></td><td>DNS</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 53</code></td></tr>
+                <tr><td><strong>445</strong></td><td>SMB</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 445</code></td></tr>
+                <tr><td><strong>135</strong></td><td>RPC</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 135</code></td></tr>
+                <tr><td><strong>3389</strong></td><td>RDP</td><td><code class="code-inline">Test-NetConnection &lt;Server-IP&gt; -Port 3389</code></td></tr>
+                <tr><td><strong>3268</strong></td><td>Global Catalog</td><td><code class="code-inline">Test-NetConnection &lt;DC-IP&gt; -Port 3268</code></td></tr>
+            </table>
+
+            <h3>Step 3.3: Verify Domain Controller Communication</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>Find available Domain Controllers</strong>
+                    <div class="code-block">nltest /dsgetdc:&lt;domain-name&gt;</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Verify secure channel status</strong>
+                    <div class="code-block">Test-ComputerSecureChannel -Verbose</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <strong>Check Netlogon service</strong>
+                    <div class="code-block">Get-Service Netlogon</div>
+                </div>
+            </div>
+
+            <h3>Step 3.4: Check DNS Configuration</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>View current DNS servers</strong>
+                    <div class="code-block">Get-DnsClientServerAddress</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Test DNS resolution for domain</strong>
+                    <div class="code-block">Resolve-DnsName &lt;domain-name&gt;</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <strong>Flush DNS cache</strong>
+                    <div class="code-block">ipconfig /flushdns</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                    <strong>Register with DNS</strong>
+                    <div class="code-block">ipconfig /registerdns</div>
+                </div>
+            </div>
+
+            <h3>Step 3.5: Check Time Synchronization</h3>
+            <div class="alert alert-warning">
+                <strong>⚠️ Important:</strong> Kerberos requires time to be within 5 minutes of the DC!
+            </div>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>Check time status</strong>
+                    <div class="code-block">w32tm /query /status</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Force time resync</strong>
+                    <div class="code-block">w32tm /resync /force</div>
+                </div>
+            </div>
+
+            <h3>Step 3.6: Check Firewall Status</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>View firewall profiles</strong>
+                    <div class="code-block">Get-NetFirewallProfile | Select Name, Enabled</div>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Check RDP firewall rule</strong>
+                    <div class="code-block">Get-NetFirewallRule -DisplayGroup "Remote Desktop" | Select DisplayName, Enabled</div>
+                </div>
+            </div>
+
+            <h3>Step 3.7: Check RDP Configuration</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>Verify RDP is enabled</strong>
+                    <div class="code-block">(Get-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server').fDenyTSConnections</div>
+                    <p><span class="status-good">0 = RDP Enabled</span> &nbsp; <span class="status-bad">1 = RDP Disabled</span></p>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Check NLA (Network Level Authentication) status</strong>
+                    <div class="code-block">(Get-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp').UserAuthentication</div>
+                    <p><span class="status-warn">1 = NLA Enabled (May block access)</span> &nbsp; <span class="status-good">0 = NLA Disabled</span></p>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <strong>Check Terminal Services status</strong>
+                    <div class="code-block">Get-Service TermService</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section4">
+            <h2>4. Check Last Logged On Users <span class="new-badge">NEW</span></h2>
+            
+            <h3>4.1 Find Currently Logged In User</h3>
+            <div class="code-block">query user</div>
+            <p>Or:</p>
+            <div class="code-block">whoami</div>
+
+            <h3>4.2 Find Last Login Time for Specific User</h3>
+            <div class="code-block">net user &lt;username&gt; /domain</div>
+            <p>Look for "Last logon" in the output.</p>
+
+            <h3>4.3 Get Recent Login Events (Last 7 Days)</h3>
+            <div class="code-block">Get-WinEvent -FilterHashtable @{LogName='Security';Id=4624;StartTime=(Get-Date).AddDays(-7)} -MaxEvents 20 | 
+Select-Object TimeCreated, @{N='User';E={$_.Properties[5].Value}}, @{N='LogonType';E={$_.Properties[8].Value}} | 
+Format-Table -AutoSize</div>
+
+            <h3>4.4 Logon Types Explained</h3>
+            <table>
+                <tr><th>Logon Type</th><th>Description</th></tr>
+                <tr><td><strong>2</strong></td><td>Interactive (Console login at physical machine)</td></tr>
+                <tr><td><strong>3</strong></td><td>Network (Accessing shared folders)</td></tr>
+                <tr><td><strong>10</strong></td><td>RemoteInteractive (RDP login)</td></tr>
+                <tr><td><strong>11</strong></td><td>CachedInteractive (Cached credentials)</td></tr>
+            </table>
+
+            <h3>4.5 Find Failed Login Attempts</h3>
+            <div class="code-block">Get-WinEvent -FilterHashtable @{LogName='Security';Id=4625;StartTime=(Get-Date).AddDays(-7)} -MaxEvents 20 | 
+Select-Object TimeCreated, @{N='User';E={$_.Properties[5].Value}}, @{N='SourceIP';E={$_.Properties[19].Value}} | 
+Format-Table -AutoSize</div>
+
+            <h3>4.6 Find Account Lockouts</h3>
+            <div class="code-block">Get-WinEvent -FilterHashtable @{LogName='Security';Id=4740;StartTime=(Get-Date).AddDays(-7)} -MaxEvents 10 | 
+Select-Object TimeCreated, @{N='User';E={$_.Properties[0].Value}} | Format-Table -AutoSize</div>
+        </div>
+
+        <div class="section" id="section5">
+            <h2>5. Check Patch History & Errors <span class="new-badge">NEW</span></h2>
+            
+            <h3>5.1 View Installed Patches (HotFixes)</h3>
+            <div class="code-block">Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 15 | Format-Table HotFixID, Description, InstalledOn, InstalledBy -AutoSize</div>
+
+            <h3>5.2 View Windows Update History</h3>
+            <div class="code-block">$Session = New-Object -ComObject Microsoft.Update.Session
+$Searcher = $Session.CreateUpdateSearcher()
+$History = $Searcher.QueryHistory(0,20)
+$History | Select-Object Date, Title, ResultCode | Format-Table -AutoSize</div>
+
+            <h3>5.3 Check for Specific KB</h3>
+            <div class="code-block">Get-HotFix -Id KB5077795</div>
+
+            <h3>5.4 Get System Errors BEFORE a Patch Date</h3>
+            <div class="code-block"># Replace the date with 24 hours before patch install
+$PatchDate = Get-Date "2026-01-20"
+Get-WinEvent -FilterHashtable @{LogName='System';Level=1,2;StartTime=$PatchDate.AddHours(-24);EndTime=$PatchDate} -MaxEvents 20 | 
+Select-Object TimeCreated, Id, Message | Format-Table -AutoSize</div>
+
+            <h3>5.5 Get System Errors AFTER a Patch Date</h3>
+            <div class="code-block"># Replace the date with patch install date
+$PatchDate = Get-Date "2026-01-20"
+Get-WinEvent -FilterHashtable @{LogName='System';Level=1,2;StartTime=$PatchDate;EndTime=$PatchDate.AddHours(48)} -MaxEvents 20 | 
+Select-Object TimeCreated, Id, Message | Format-Table -AutoSize</div>
+
+            <div class="alert alert-info">
+                <strong>💡 Analysis Tip:</strong> If errors INCREASED after patch install, the patch may have caused the issue. Consider uninstalling that specific KB.
+            </div>
+
+            <h3>5.6 Uninstall a Problematic Patch</h3>
+            <div class="code-block">wusa /uninstall /kb:5073723 /quiet /norestart</div>
+            <div class="alert alert-danger">
+                <strong>🔴 Warning:</strong> Only uninstall patches if you've confirmed they caused the issue. Requires reboot.
+            </div>
+        </div>
+
+        <div class="section" id="section6">
+            <h2>6. Check Disk Space & Memory <span class="new-badge">NEW</span></h2>
+            
+            <h3>6.1 Check Disk Space</h3>
+            <div class="code-block">Get-WmiObject Win32_LogicalDisk -Filter "DriveType=3" | 
+Select-Object DeviceID, 
+    @{N='SizeGB';E={[math]::Round($_.Size/1GB,2)}}, 
+    @{N='FreeGB';E={[math]::Round($_.FreeSpace/1GB,2)}}, 
+    @{N='FreePercent';E={[math]::Round(($_.FreeSpace/$_.Size)*100,1)}} | 
+Format-Table -AutoSize</div>
+
+            <div class="alert alert-warning">
+                <strong>⚠️ Warning Thresholds:</strong><br>
+                • Less than 20% free = <span class="status-warn">WARNING</span><br>
+                • Less than 10% free = <span class="status-bad">CRITICAL</span>
+            </div>
+
+            <h3>6.2 Check Memory Usage</h3>
+            <div class="code-block">$os = Get-WmiObject Win32_OperatingSystem
+$totalMem = [math]::Round($os.TotalVisibleMemorySize/1MB,2)
+$freeMem = [math]::Round($os.FreePhysicalMemory/1MB,2)
+$usedPercent = [math]::Round((1-($os.FreePhysicalMemory/$os.TotalVisibleMemorySize))*100,1)
+Write-Host "Total Memory: $totalMem GB"
+Write-Host "Free Memory: $freeMem GB"
+Write-Host "Memory Used: $usedPercent %"</div>
+
+            <h3>6.3 Find Top Memory Consuming Processes</h3>
+            <div class="code-block">Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 10 Name, @{N='MemoryMB';E={[math]::Round($_.WorkingSet64/1MB,2)}} | Format-Table -AutoSize</div>
+
+            <h3>6.4 Find Top CPU Consuming Processes</h3>
+            <div class="code-block">Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 Name, CPU, @{N='MemoryMB';E={[math]::Round($_.WorkingSet64/1MB,2)}} | Format-Table -AutoSize</div>
+        </div>
+
+        <div class="section" id="section7">
+            <h2>7. Check Pending Reboot <span class="new-badge">NEW</span></h2>
+            
+            <h3>7.1 Quick Pending Reboot Check</h3>
+            <div class="code-block">$reboot = $false
+if (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending" -EA SilentlyContinue) { $reboot = $true; Write-Host "Reboot pending: Component Based Servicing" }
+if (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" -EA SilentlyContinue) { $reboot = $true; Write-Host "Reboot pending: Windows Update" }
+if (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name PendingFileRenameOperations -EA SilentlyContinue) { $reboot = $true; Write-Host "Reboot pending: File Rename Operations" }
+if (-not $reboot) { Write-Host "No pending reboot detected" -ForegroundColor Green }</div>
+
+            <h3>7.2 Check Last Boot Time</h3>
+            <div class="code-block">$os = Get-WmiObject Win32_OperatingSystem
+$lastBoot = $os.ConvertToDateTime($os.LastBootUpTime)
+$uptime = (Get-Date) - $lastBoot
+Write-Host "Last Boot: $lastBoot"
+Write-Host "Uptime: $($uptime.Days) days, $($uptime.Hours) hours"</div>
+
+            <div class="alert alert-info">
+                <strong>💡 Tip:</strong> If uptime is very long (30+ days), consider scheduling a maintenance reboot.
+            </div>
+        </div>
+
+        <div class="section" id="section8">
+            <h2>8. Access Methods When RDP Fails</h2>
+            
+            <h3>8.1 AWS EC2 Serial Console</h3>
+            <ol>
+                <li>Go to <strong>AWS Console → EC2 → Instances</strong></li>
+                <li>Select the instance</li>
+                <li>Click <strong>Connect → EC2 Serial Console</strong> tab</li>
+                <li>Click <strong>Connect</strong> (requires SAC enabled on instance)</li>
+                <li>Type: <code class="code-inline">cmd</code> to start command prompt</li>
+                <li>Type: <code class="code-inline">ch -sn cmd0001</code> to connect to channel</li>
+            </ol>
+            <div class="alert alert-danger">
+                <strong>🔴 Note:</strong> If SSM Agent is not online, Serial Console is the ONLY option!
+            </div>
+
+            <h3>8.2 Azure Serial Console</h3>
+            <ol>
+                <li>Go to <strong>Azure Portal → Virtual Machines</strong></li>
+                <li>Select the VM</li>
+                <li>Under <strong>Support + troubleshooting</strong>, click <strong>Serial Console</strong></li>
+                <li>Press <strong>Enter</strong> to activate SAC prompt</li>
+                <li>Type: <code class="code-inline">cmd</code> then <code class="code-inline">ch -sn cmd0001</code></li>
+            </ol>
+
+            <h3>8.3 PowerShell Remoting</h3>
+            <div class="code-block">Enter-PSSession -ComputerName &lt;server&gt; -Credential (Get-Credential)</div>
+
+            <h3>8.4 Access via Network Share</h3>
+            <div class="code-block"># Copy files to remote server
+Copy-Item "C:\localfile.msu" "\\&lt;server-ip&gt;\c$\temp\"</div>
+        </div>
+
+        <div class="section" id="section9">
+            <h2>9. Resolution Procedures</h2>
+            
+            <h3>9.1 Repair Trust Relationship</h3>
+            <div class="alert alert-danger">
+                <strong>🔐 REQUIRES:</strong> Domain Admin credentials
+            </div>
+            <div class="code-block">Test-ComputerSecureChannel -Repair -Credential (Get-Credential)</div>
+            <p>Or reset computer password:</p>
+            <div class="code-block">Reset-ComputerMachinePassword -Credential (Get-Credential)</div>
+
+            <h3>9.2 Enable RDP</h3>
+            <div class="code-block">Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+Restart-Service TermService -Force</div>
+
+            <h3>9.3 Disable NLA (Temporary)</h3>
+            <p><em>Use when trust is broken and NLA prevents login</em></p>
+            <div class="code-block">Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name UserAuthentication -Value 0</div>
+
+            <h3>9.4 Change DNS Server</h3>
+            <div class="code-block">Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses ("10.0.0.1","10.0.0.2")</div>
+
+            <h3>9.5 Install OOB Patch (KB5077795)</h3>
+            <div class="code-block"># Copy patch to server first, then:
+Start-Process -FilePath "wusa.exe" -ArgumentList "C:\temp\windows10.0-kb5077795-x64.msu","/quiet","/norestart" -Wait
+Restart-Computer -Force</div>
+        </div>
+
+        <div class="section" id="section10">
+            <h2>10. Rejoin Server to Domain <span class="new-badge">NEW</span></h2>
+            
+            <div class="alert alert-danger">
+                <strong>🔐 REQUIRES:</strong> Local Admin + Domain Admin credentials
+            </div>
+
+            <h3>Step 1: Remove from Domain</h3>
+            <div class="code-block"># Use local admin account
+Remove-Computer -UnjoinDomainCredential (Get-Credential) -Force -Restart</div>
+
+            <h3>Step 2: After Restart, Rejoin Domain</h3>
+            <div class="code-block"># Log in with local admin, then run:
+Add-Computer -DomainName "yourdomain.com" -Credential (Get-Credential) -Restart</div>
+
+            <h3>Alternative: Reset via netdom</h3>
+            <div class="code-block">netdom resetpwd /server:&lt;DC-name&gt; /userd:DOMAIN\admin /passwordd:*</div>
+
+            <div class="alert alert-warning">
+                <strong>⚠️ Important:</strong> After rejoining, verify GPO applies correctly: <code class="code-inline">gpupdate /force</code>
+            </div>
+        </div>
+
+        <div class="section" id="section11">
+            <h2>11. Escalation Criteria</h2>
+            <div class="alert alert-warning">
+                <strong>⬆️ Escalate to L2/L3 if:</strong>
+            </div>
+            <ul>
+                <li>Trust repair fails after <strong>2 attempts</strong></li>
+                <li>Domain Controller is unreachable from <strong>multiple servers</strong></li>
+                <li>AWS/Azure Serial Console is <strong>not working</strong></li>
+                <li>GPO is <strong>blocking changes</strong></li>
+                <li><strong>Multiple servers</strong> affected simultaneously</li>
+                <li>Issue persists after <strong>domain rejoin</strong></li>
+                <li><strong>Customer production is down</strong></li>
+                <li>Disk space is <strong>critically low</strong> and cannot free up space</li>
+                <li>Errors <strong>increased significantly after patch</strong></li>
+            </ul>
+        </div>
+
+        <div class="section" id="section12">
+            <h2>12. Quick Reference Commands</h2>
+            <table>
+                <tr><th>Task</th><th>Command</th></tr>
+                <tr><td>Find DC</td><td><code class="code-inline">nltest /dsgetdc:&lt;domain&gt;</code></td></tr>
+                <tr><td>Test Trust</td><td><code class="code-inline">Test-ComputerSecureChannel -Verbose</code></td></tr>
+                <tr><td>Repair Trust</td><td><code class="code-inline">Test-ComputerSecureChannel -Repair -Credential (Get-Credential)</code></td></tr>
+                <tr><td>Reset Password</td><td><code class="code-inline">Reset-ComputerMachinePassword -Credential (Get-Credential)</code></td></tr>
+                <tr><td>Check Time</td><td><code class="code-inline">w32tm /query /status</code></td></tr>
+                <tr><td>Sync Time</td><td><code class="code-inline">w32tm /resync /force</code></td></tr>
+                <tr><td>Flush DNS</td><td><code class="code-inline">ipconfig /flushdns</code></td></tr>
+                <tr><td>Register DNS</td><td><code class="code-inline">ipconfig /registerdns</code></td></tr>
+                <tr><td>Test Port</td><td><code class="code-inline">Test-NetConnection &lt;IP&gt; -Port &lt;port&gt;</code></td></tr>
+                <tr><td>Get DNS Servers</td><td><code class="code-inline">Get-DnsClientServerAddress</code></td></tr>
+                <tr><td>Set DNS</td><td><code class="code-inline">Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses "IP"</code></td></tr>
+                <tr><td>Check RDP</td><td><code class="code-inline">(Get-ItemProperty 'HKLM:\...\Terminal Server').fDenyTSConnections</code></td></tr>
+                <tr><td>Enable RDP FW</td><td><code class="code-inline">Enable-NetFirewallRule -DisplayGroup "Remote Desktop"</code></td></tr>
+                <tr><td>GPO Update</td><td><code class="code-inline">gpupdate /force</code></td></tr>
+                <tr><td>Remote PS</td><td><code class="code-inline">Enter-PSSession -ComputerName &lt;server&gt; -Credential (Get-Credential)</code></td></tr>
+                <tr><td>Last Login</td><td><code class="code-inline">query user</code></td></tr>
+                <tr><td>Installed Patches</td><td><code class="code-inline">Get-HotFix | Sort InstalledOn -Desc | Select -First 10</code></td></tr>
+                <tr><td>Disk Space</td><td><code class="code-inline">Get-WmiObject Win32_LogicalDisk -Filter "DriveType=3"</code></td></tr>
+                <tr><td>Memory Usage</td><td><code class="code-inline">(Get-WmiObject Win32_OperatingSystem).FreePhysicalMemory</code></td></tr>
+                <tr><td>Last Boot</td><td><code class="code-inline">systeminfo | find "Boot Time"</code></td></tr>
+                <tr><td>Pending Reboot</td><td><code class="code-inline">Get-Item "HKLM:\SOFTWARE\...\RebootPending"</code></td></tr>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p><strong>Document Version:</strong> 2.0 | <strong>Last Updated:</strong> January 2026</p>
+            <p>L1 Windows Server Troubleshooting Guide | Server-Diagnostics Repository</p>
+        </div>
+    </div>
+</body>
+</html>
