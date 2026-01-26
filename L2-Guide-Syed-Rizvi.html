@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L2 Windows Server Troubleshooting Guide - Syed Rizvi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 3px solid #5c2d91; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #5c2d91; font-size: 2em; margin-bottom: 10px; }
+        .header .subtitle { color: #666; font-size: 1.1em; }
+        .header .version { color: #888; font-size: 0.9em; margin-top: 10px; }
+        .header .level-badge { display: inline-block; background: #5c2d91; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; margin-top: 10px; }
+        .toc { background: #f8f9fa; padding: 20px 30px; border-radius: 5px; margin-bottom: 30px; }
+        .toc h2 { color: #5c2d91; margin-bottom: 15px; font-size: 1.3em; }
+        .toc ol { padding-left: 20px; }
+        .toc li { margin: 8px 0; }
+        .toc a { color: #5c2d91; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .l2-badge { background: #5c2d91; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px; }
+        .aws-badge { background: #ff9900; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px; }
+        .azure-badge { background: #0078d4; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 5px; }
+        section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        section h2 { color: #5c2d91; font-size: 1.4em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e1e4e8; }
+        section h3 { color: #333; font-size: 1.1em; margin: 20px 0 10px 0; }
+        .code-block { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em; overflow-x: auto; margin: 10px 0; white-space: pre-wrap; word-wrap: break-word; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        .advanced { background: #e8daef; border-left: 4px solid #5c2d91; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        .aws-box { background: #fff8e6; border-left: 4px solid #ff9900; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        .azure-box { background: #e6f3ff; border-left: 4px solid #0078d4; padding: 15px; margin: 15px 0; border-radius: 0 5px 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }
+        th { background: #5c2d91; color: white; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        ul, ol { padding-left: 25px; margin: 10px 0; }
+        li { margin: 5px 0; }
+        .expected { color: #28a745; font-weight: bold; }
+        .if-false { color: #dc3545; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; font-size: 0.9em; }
+        @media print { body { background: white; padding: 0; } .container { box-shadow: none; padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ L2 Windows Server Troubleshooting Guide</h1>
+            <div class="subtitle">Advanced Domain Connectivity, RDP, AWS &amp; Azure Issues | Windows Server 2012 R2 - 2022</div>
+            <div class="level-badge">LEVEL 2 - ADVANCED SUPPORT</div>
+            <div class="version"><strong>Version 2.0 - January 2026</strong></div>
+        </div>
+
+        <nav class="toc">
+            <h2>📋 Table of Contents</h2>
+            <ol>
+                <li><a href="#section1">Initial Assessment</a></li>
+                <li><a href="#section2">Common Error Messages &amp; Quick Fixes</a></li>
+                <li><a href="#section3">Step-by-Step Troubleshooting</a></li>
+                <li><a href="#section4">Check Last Logged On Users</a></li>
+                <li><a href="#section5">Check Patch History &amp; Errors</a></li>
+                <li><a href="#section6">Check Disk Space &amp; Memory</a></li>
+                <li><a href="#section7">Check Pending Reboot</a></li>
+                <li><a href="#section8">Port Connectivity &amp; Firewall Analysis</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section9">AWS Systems Manager (SSM) Troubleshooting</a> <span class="aws-badge">AWS</span></li>
+                <li><a href="#section10">Azure Serial Console Troubleshooting</a> <span class="azure-badge">Azure</span></li>
+                <li><a href="#section11">Alternative Access Methods When RDP Fails</a></li>
+                <li><a href="#section12">Resolution Procedures</a></li>
+                <li><a href="#section13">Rejoin Server to Domain</a></li>
+                <li><a href="#section14">Advanced GPO &amp; Group Policy Troubleshooting</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section15">Active Directory Replication Issues</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section16">Kerberos &amp; Certificate Troubleshooting</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section17">Advanced Performance Analysis</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section18">Event Log Deep Dive Analysis</a> <span class="l2-badge">L2</span></li>
+                <li><a href="#section19">Escalation Criteria</a></li>
+                <li><a href="#section20">Quick Reference Commands</a></li>
+            </ol>
+        </nav>
+
+        <section id="section1">
+            <h2>1. Initial Assessment</h2>
+            <p>Before troubleshooting, gather the following information from the ticket:</p>
+            <table>
+                <tr><th>Information</th><th>Details to Collect</th></tr>
+                <tr><td><strong>Server Name/IP</strong></td><td>Hostname or IP address of affected server</td></tr>
+                <tr><td><strong>Domain Name</strong></td><td>Active Directory domain (e.g., corp.company.com)</td></tr>
+                <tr><td><strong>Error Message</strong></td><td>Exact error message user is seeing</td></tr>
+                <tr><td><strong>Last Working</strong></td><td>When did it last work correctly?</td></tr>
+                <tr><td><strong>Recent Changes</strong></td><td>Any recent patches, updates, or changes?</td></tr>
+                <tr><td><strong>Cloud Platform</strong></td><td>AWS, Azure, On-Premises, or Hybrid</td></tr>
+                <tr><td><strong>Last Patch Date</strong></td><td>When was the last Windows Update installed?</td></tr>
+                <tr><td><strong>L1 Actions Taken</strong></td><td>What troubleshooting has L1 already performed?</td></tr>
+            </table>
+        </section>
+
+        <section id="section2">
+            <h2>2. Common Error Messages &amp; Quick Fixes</h2>
+            <table>
+                <tr><th>Error Message</th><th>Likely Cause</th></tr>
+                <tr><td>❌ <strong>The trust relationship between this workstation and the primary domain failed</strong></td><td>Computer account password out of sync with AD</td></tr>
+                <tr><td>❌ <strong>There are currently no logon servers available</strong></td><td>Cannot reach Domain Controller - DNS or network issue</td></tr>
+                <tr><td>⚠️ <strong>The remote computer requires Network Level Authentication</strong></td><td>NLA enabled but credentials cannot be verified</td></tr>
+                <tr><td>❌ <strong>Remote Desktop can't connect to the remote computer</strong></td><td>RDP disabled, firewall blocking, or service stopped</td></tr>
+                <tr><td>⚠️ <strong>The user name or password is incorrect</strong></td><td>Wrong credentials, locked account, or trust issue</td></tr>
+                <tr><td>❌ <strong>An authentication error has occurred</strong></td><td>Kerberos/time sync issue or NLA problem</td></tr>
+                <tr><td>❌ <strong>Logon Failed</strong></td><td>January 2026 Patch KB5073723 bug - Install KB5077795</td></tr>
+                <tr><td>❌ <strong>KDC_ERR_PREAUTH_FAILED</strong></td><td>Kerberos pre-authentication failure - Check account/password</td></tr>
+                <tr><td>❌ <strong>The security database on the server does not have a computer account</strong></td><td>Computer account deleted or corrupted in AD</td></tr>
+            </table>
+        </section>
+
+        <section id="section3">
+            <h2>3. Step-by-Step Troubleshooting</h2>
+            
+            <h3>Step 1: Verify Network Connectivity</h3>
+            <div class="code-block">Test-NetConnection -ComputerName &lt;server-name-or-ip&gt; -Port 3389</div>
+            <p><span class="expected">✅ Expected:</span> <code>TcpTestSucceeded: True</code></p>
+            <p><span class="if-false">If False:</span> Check firewall rules, Security Groups (AWS) or NSG (Azure)</p>
+
+            <h3>Step 2: Check Domain Trust</h3>
+            <div class="code-block">Test-ComputerSecureChannel -Verbose</div>
+            <p><span class="expected">✅ Expected:</span> <code>True</code></p>
+            <p><span class="if-false">If False:</span> Trust relationship is broken - proceed to repair</p>
+
+            <h3>Step 3: Verify DNS Resolution</h3>
+            <div class="code-block">nslookup &lt;domain.com&gt;
+nltest /dsgetdc:&lt;domain.com&gt;</div>
+
+            <h3>Step 4: Check Time Synchronization</h3>
+            <div class="code-block">w32tm /query /status</div>
+            <div class="warning">⚠️ Time difference &gt;5 minutes causes Kerberos failures. Fix: <code>w32tm /resync /force</code></div>
+
+            <h3>Step 5: Verify RDP Service</h3>
+            <div class="code-block">Get-Service TermService | Select-Object Status, StartType</div>
+
+            <h3>Step 6: Check RDP Registry</h3>
+            <div class="code-block">Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections</div>
+            <p><span class="expected">✅ Expected:</span> <code>fDenyTSConnections: 0</code></p>
+
+            <h3>Step 7: Check Firewall Rules</h3>
+            <div class="code-block">Get-NetFirewallRule -DisplayGroup "Remote Desktop" | Select-Object DisplayName, Enabled</div>
+        </section>
+
+        <section id="section4">
+            <h2>4. Check Last Logged On Users</h2>
+            <div class="code-block">query user
+
+Get-EventLog -LogName Security -InstanceId 4624 -Newest 10 | 
+    Select-Object TimeGenerated, @{N='User';E={$_.ReplacementStrings[5]}}, @{N='LogonType';E={$_.ReplacementStrings[8]}}</div>
+            <table>
+                <tr><th>Logon Type</th><th>Meaning</th></tr>
+                <tr><td>2</td><td>Interactive (Console)</td></tr>
+                <tr><td>3</td><td>Network</td></tr>
+                <tr><td>10</td><td>RDP</td></tr>
+            </table>
+        </section>
+
+        <section id="section5">
+            <h2>5. Check Patch History &amp; Errors</h2>
+            <div class="code-block">Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 10
+
+Get-WinEvent -FilterHashtable @{LogName='System'; ProviderName='Microsoft-Windows-WindowsUpdateClient'; Level=2} -MaxEvents 20</div>
+            <div class="error">🔥 <strong>January 2026:</strong> KB5073723 causes "Logon Failed" - Install KB5077795</div>
+        </section>
+
+        <section id="section6">
+            <h2>6. Check Disk Space &amp; Memory</h2>
+            <div class="code-block">Get-WmiObject Win32_LogicalDisk -Filter "DriveType=3" | 
+    Select-Object DeviceID, @{N='Size(GB)';E={[math]::Round($_.Size/1GB,2)}}, 
+    @{N='Free(GB)';E={[math]::Round($_.FreeSpace/1GB,2)}}, 
+    @{N='Free%';E={[math]::Round(($_.FreeSpace/$_.Size)*100,2)}}</div>
+        </section>
+
+        <section id="section7">
+            <h2>7. Check Pending Reboot</h2>
+            <div class="code-block">$paths = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired',
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'
+)
+foreach ($path in $paths) { if (Test-Path $path) { Write-Host "REBOOT REQUIRED: $path" -ForegroundColor Red } }</div>
+        </section>
+
+        <section id="section8">
+            <h2>8. Port Connectivity &amp; Firewall Analysis <span class="l2-badge">L2</span></h2>
+            <div class="advanced"><strong>🔧 L2:</strong> Detailed port and firewall troubleshooting</div>
+
+            <h3>8.1 Test Critical Ports</h3>
+            <div class="code-block"># RDP Port
+Test-NetConnection -ComputerName &lt;server&gt; -Port 3389
+
+# WinRM Ports
+Test-NetConnection -ComputerName &lt;server&gt; -Port 5985
+Test-NetConnection -ComputerName &lt;server&gt; -Port 5986
+
+# DC Ports (against DC IP)
+Test-NetConnection -ComputerName &lt;DC-IP&gt; -Port 389   # LDAP
+Test-NetConnection -ComputerName &lt;DC-IP&gt; -Port 88    # Kerberos
+Test-NetConnection -ComputerName &lt;DC-IP&gt; -Port 53    # DNS
+Test-NetConnection -ComputerName &lt;DC-IP&gt; -Port 445   # SMB</div>
+
+            <h3>8.2 Critical Ports Reference</h3>
+            <table>
+                <tr><th>Port</th><th>Service</th><th>Required For</th></tr>
+                <tr><td>3389</td><td>RDP</td><td>Remote Desktop</td></tr>
+                <tr><td>5985/5986</td><td>WinRM</td><td>PowerShell Remoting</td></tr>
+                <tr><td>389/636</td><td>LDAP/LDAPS</td><td>AD authentication</td></tr>
+                <tr><td>88</td><td>Kerberos</td><td>Domain auth</td></tr>
+                <tr><td>53</td><td>DNS</td><td>Name resolution</td></tr>
+                <tr><td>445</td><td>SMB</td><td>File shares, GPO</td></tr>
+            </table>
+
+            <h3>8.3 Firewall Analysis</h3>
+            <div class="code-block"># Check profiles
+Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction
+
+# Check RDP rules
+Get-NetFirewallRule -DisplayGroup "Remote Desktop" | Select-Object DisplayName, Enabled, Direction, Action
+
+# Enable RDP firewall
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"</div>
+        </section>
+
+        <section id="section9">
+            <h2>9. AWS Systems Manager (SSM) Troubleshooting <span class="aws-badge">AWS</span></h2>
+            <div class="aws-box"><strong>☁️ AWS:</strong> Use SSM Session Manager when RDP is blocked</div>
+
+            <h3>9.1 How to Connect via AWS SSM</h3>
+            <ol>
+                <li>Go to <strong>AWS Console → Systems Manager → Session Manager</strong></li>
+                <li>Click <strong>Start Session</strong></li>
+                <li>Select your EC2 instance</li>
+                <li>Click <strong>Start Session</strong> - PowerShell opens in browser</li>
+            </ol>
+
+            <h3>9.2 SSM Prerequisites</h3>
+            <table>
+                <tr><th>Requirement</th><th>How to Verify</th></tr>
+                <tr><td>SSM Agent Running</td><td><code>Get-Service AmazonSSMAgent</code></td></tr>
+                <tr><td>IAM Instance Profile</td><td>Must have <code>AmazonSSMManagedInstanceCore</code> policy</td></tr>
+                <tr><td>Network Connectivity</td><td>VPC endpoints OR NAT Gateway</td></tr>
+            </table>
+
+            <h3>9.3 SSM Troubleshooting Commands</h3>
+            <div class="code-block"># Check SSM Agent
+Get-Service AmazonSSMAgent
+
+# Restart SSM Agent
+Restart-Service AmazonSSMAgent
+
+# Check SSM logs
+Get-Content "C:\ProgramData\Amazon\SSM\Logs\amazon-ssm-agent.log" -Tail 50
+
+# Test SSM endpoints (must be reachable on 443)
+Test-NetConnection ssm.us-east-1.amazonaws.com -Port 443
+Test-NetConnection ssmmessages.us-east-1.amazonaws.com -Port 443
+Test-NetConnection ec2messages.us-east-1.amazonaws.com -Port 443</div>
+
+            <h3>9.4 Common SSM Issues</h3>
+            <table>
+                <tr><th>Issue</th><th>Cause</th><th>Solution</th></tr>
+                <tr><td>Instance not in Session Manager</td><td>SSM Agent not running / No IAM role</td><td>Start AmazonSSMAgent, attach IAM role</td></tr>
+                <tr><td>"Connection Lost"</td><td>Network to SSM endpoints</td><td>Check VPC endpoints or NAT Gateway</td></tr>
+                <tr><td>Permission denied</td><td>IAM permissions</td><td>Add AmazonSSMManagedInstanceCore policy</td></tr>
+            </table>
+
+            <h3>9.5 Check Security Group for RDP</h3>
+            <div class="code-block"># AWS CLI
+aws ec2 describe-security-groups --group-ids sg-xxxxxxxx --query 'SecurityGroups[*].IpPermissions[?FromPort==`3389`]'</div>
+            <div class="warning">⚠️ Security Group must allow TCP 3389 inbound from your IP</div>
+        </section>
+
+        <section id="section10">
+            <h2>10. Azure Serial Console Troubleshooting <span class="azure-badge">Azure</span></h2>
+            <div class="azure-box"><strong>☁️ Azure:</strong> Serial Console works even when networking is down</div>
+
+            <h3>10.1 How to Connect via Azure Serial Console</h3>
+            <ol>
+                <li>Go to <strong>Azure Portal → Virtual Machines</strong></li>
+                <li>Select your VM</li>
+                <li>Click <strong>Help → Serial Console</strong></li>
+                <li>Press <strong>Enter</strong> to activate SAC</li>
+                <li>Type <code>cmd</code> to create command channel</li>
+                <li>Type <code>ch -sn Cmd0001</code> to switch to it</li>
+                <li>Login with <strong>LOCAL admin</strong>: <code>.\Administrator</code></li>
+            </ol>
+
+            <h3>10.2 Serial Console Prerequisites</h3>
+            <table>
+                <tr><th>Requirement</th><th>How to Enable</th></tr>
+                <tr><td><strong>Boot Diagnostics REQUIRED</strong></td><td>VM Settings → Diagnostics → Boot diagnostics → ON</td></tr>
+                <tr><td>VM must be running</td><td>Start VM</td></tr>
+            </table>
+            <div class="error">❌ <strong>"Serial console not available"?</strong> Enable Boot Diagnostics first!</div>
+
+            <h3>10.3 SAC Commands</h3>
+            <div class="code-block"># In SAC prompt:
+cmd                   # Create command channel
+ch -sn Cmd0001       # Switch to channel
+ch -si 1             # Switch by index
+?                    # Help
+restart              # Restart VM</div>
+
+            <h3>10.4 Common Serial Console Issues</h3>
+            <table>
+                <tr><th>Issue</th><th>Cause</th><th>Solution</th></tr>
+                <tr><td>"Serial console not available"</td><td>Boot Diagnostics disabled</td><td>Enable Boot Diagnostics</td></tr>
+                <tr><td>Black screen</td><td>EMS not enabled</td><td><code>bcdedit /ems on</code></td></tr>
+                <tr><td>Cannot login</td><td>Using domain creds</td><td>Use LOCAL: <code>.\Administrator</code></td></tr>
+            </table>
+
+            <h3>10.5 Enable EMS for Serial Console</h3>
+            <div class="code-block">bcdedit /ems {current} on
+bcdedit /emssettings EMSPORT:1 EMSBAUDRATE:115200
+Restart-Computer</div>
+
+            <h3>10.6 Check Azure NSG</h3>
+            <div class="code-block"># Azure CLI
+az network nsg rule list --nsg-name &lt;nsg&gt; --resource-group &lt;rg&gt; --query "[?destinationPortRange=='3389']"</div>
+        </section>
+
+        <section id="section11">
+            <h2>11. Alternative Access Methods When RDP Fails</h2>
+            <table>
+                <tr><th>Method</th><th>Platform</th><th>Command/Steps</th></tr>
+                <tr><td><strong>AWS SSM Session Manager</strong></td><td>AWS</td><td>AWS Console → Systems Manager → Session Manager</td></tr>
+                <tr><td><strong>Azure Serial Console</strong></td><td>Azure</td><td>Azure Portal → VM → Serial Console</td></tr>
+                <tr><td><strong>PowerShell Remoting</strong></td><td>Any</td><td><code>Enter-PSSession -ComputerName &lt;server&gt; -Credential (Get-Credential)</code></td></tr>
+                <tr><td><strong>Azure Run Command</strong></td><td>Azure</td><td>VM → Run Command → RunPowerShellScript</td></tr>
+                <tr><td><strong>AWS Run Command</strong></td><td>AWS</td><td>Systems Manager → Run Command</td></tr>
+                <tr><td><strong>PsExec</strong></td><td>Any</td><td><code>psexec \\&lt;server&gt; cmd</code></td></tr>
+            </table>
+        </section>
+
+        <section id="section12">
+            <h2>12. Resolution Procedures</h2>
+            <h3>12.1 Repair Trust</h3>
+            <div class="code-block">Test-ComputerSecureChannel -Repair -Credential (Get-Credential)
+# OR
+Reset-ComputerMachinePassword -Credential (Get-Credential)</div>
+
+            <h3>12.2 Enable RDP</h3>
+            <div class="code-block">Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+Restart-Service TermService -Force</div>
+
+            <h3>12.3 Disable NLA</h3>
+            <div class="code-block">Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name UserAuthentication -Value 0</div>
+
+            <h3>12.4 Force Time Sync</h3>
+            <div class="code-block">w32tm /resync /force</div>
+        </section>
+
+        <section id="section13">
+            <h2>13. Rejoin Server to Domain</h2>
+            <div class="code-block"># Step 1: Remove from domain
+Remove-Computer -UnjoinDomainCredential (Get-Credential) -Force -Restart
+
+# Step 2: After restart, rejoin
+Add-Computer -DomainName "yourdomain.com" -Credential (Get-Credential) -Restart
+
+# Alternative: netdom
+netdom resetpwd /server:&lt;DC&gt; /userd:DOMAIN\admin /passwordd:*</div>
+        </section>
+
+        <section id="section14">
+            <h2>14. Advanced GPO Troubleshooting <span class="l2-badge">L2</span></h2>
+            <div class="code-block">gpresult /h C:\temp\gpreport.html /f
+gpresult /r
+gpupdate /force /boot
+
+Get-WinEvent -LogName "Microsoft-Windows-GroupPolicy/Operational" -MaxEvents 50 | 
+    Where-Object {$_.LevelDisplayName -match "Error|Warning"}</div>
+        </section>
+
+        <section id="section15">
+            <h2>15. AD Replication Issues <span class="l2-badge">L2</span></h2>
+            <div class="code-block">repadmin /replsummary
+repadmin /showrepl
+repadmin /syncall /AdeP
+dcdiag /v /c /e</div>
+        </section>
+
+        <section id="section16">
+            <h2>16. Kerberos Troubleshooting <span class="l2-badge">L2</span></h2>
+            <div class="code-block">klist
+klist purge
+setspn -L &lt;computer&gt;
+setspn -X</div>
+            <table>
+                <tr><th>Error</th><th>Fix</th></tr>
+                <tr><td>KRB_AP_ERR_SKEW</td><td><code>w32tm /resync /force</code></td></tr>
+                <tr><td>KDC_ERR_PREAUTH_FAILED</td><td>Verify credentials</td></tr>
+            </table>
+        </section>
+
+        <section id="section17">
+            <h2>17. Performance Analysis <span class="l2-badge">L2</span></h2>
+            <div class="code-block"># Top CPU
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 Name, CPU, Id
+
+# Top Memory
+Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 10 Name, @{N='MB';E={[math]::Round($_.WorkingSet64/1MB,2)}}
+
+# Disk Queue
+Get-Counter '\PhysicalDisk(*)\Current Disk Queue Length'</div>
+        </section>
+
+        <section id="section18">
+            <h2>18. Event Log Analysis <span class="l2-badge">L2</span></h2>
+            <table>
+                <tr><th>Event ID</th><th>Log</th><th>Description</th></tr>
+                <tr><td>4625</td><td>Security</td><td>Failed logon</td></tr>
+                <tr><td>4771</td><td>Security</td><td>Kerberos pre-auth failed</td></tr>
+                <tr><td>5719</td><td>NETLOGON</td><td>Cannot contact DC</td></tr>
+                <tr><td>1030/1058</td><td>Group Policy</td><td>GPO failure</td></tr>
+            </table>
+            <div class="code-block">Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625;StartTime=(Get-Date).AddHours(-24)}</div>
+        </section>
+
+        <section id="section19">
+            <h2>19. Escalation Criteria</h2>
+            <h3>⬆️ Escalate to L3 if:</h3>
+            <ul>
+                <li>Trust repair fails after <strong>2 attempts</strong></li>
+                <li><strong>Multiple servers</strong> affected</li>
+                <li>AWS SSM &amp; Azure Serial Console <strong>both unavailable</strong></li>
+                <li><strong>AD replication failures</strong> on multiple DCs</li>
+                <li>Issue persists after <strong>domain rejoin</strong></li>
+                <li><strong>Security breach</strong> suspected</li>
+            </ul>
+        </section>
+
+        <section id="section20">
+            <h2>20. Quick Reference Commands</h2>
+            <table>
+                <tr><th>Task</th><th>Command</th></tr>
+                <tr><td>Find DC</td><td><code>nltest /dsgetdc:&lt;domain&gt;</code></td></tr>
+                <tr><td>Test Trust</td><td><code>Test-ComputerSecureChannel -Verbose</code></td></tr>
+                <tr><td>Repair Trust</td><td><code>Test-ComputerSecureChannel -Repair -Credential (Get-Credential)</code></td></tr>
+                <tr><td>Reset Computer Pwd</td><td><code>Reset-ComputerMachinePassword -Credential (Get-Credential)</code></td></tr>
+                <tr><td>Check Time</td><td><code>w32tm /query /status</code></td></tr>
+                <tr><td>Sync Time</td><td><code>w32tm /resync /force</code></td></tr>
+                <tr><td>Flush DNS</td><td><code>ipconfig /flushdns</code></td></tr>
+                <tr><td>Register DNS</td><td><code>ipconfig /registerdns</code></td></tr>
+                <tr><td>Test Port</td><td><code>Test-NetConnection &lt;IP&gt; -Port &lt;port&gt;</code></td></tr>
+                <tr><td>Enable RDP</td><td><code>Set-ItemProperty -Path 'HKLM:\...\Terminal Server' -Name fDenyTSConnections -Value 0</code></td></tr>
+                <tr><td>Enable RDP Firewall</td><td><code>Enable-NetFirewallRule -DisplayGroup "Remote Desktop"</code></td></tr>
+                <tr><td>Disable NLA</td><td><code>Set-ItemProperty -Path 'HKLM:\...\RDP-Tcp' -Name UserAuthentication -Value 0</code></td></tr>
+                <tr><td>GPO Report</td><td><code>gpresult /h C:\temp\gpo.html /f</code></td></tr>
+                <tr><td>Force GPO</td><td><code>gpupdate /force /boot</code></td></tr>
+                <tr><td>AD Replication</td><td><code>repadmin /replsummary</code></td></tr>
+                <tr><td>DC Diag</td><td><code>dcdiag /v /c /e</code></td></tr>
+                <tr><td>Kerberos Tickets</td><td><code>klist</code></td></tr>
+                <tr><td>Purge Tickets</td><td><code>klist purge</code></td></tr>
+                <tr><td>Check SPNs</td><td><code>setspn -L &lt;computer&gt;</code></td></tr>
+                <tr><td>SSM Agent</td><td><code>Get-Service AmazonSSMAgent</code></td></tr>
+                <tr><td>Remote PS</td><td><code>Enter-PSSession -ComputerName &lt;server&gt; -Credential (Get-Credential)</code></td></tr>
+            </table>
+        </section>
+
+        <footer style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #5c2d91; color: #666;">
+            <h3>📄 Document Information</h3>
+            <p><strong>Document Version:</strong> 2.0</p>
+            <p><strong>Last Updated:</strong> January 2026</p>
+            <p><strong>Created by:</strong> Syed Rizvi</p>
+        </footer>
+    </div>
+</body>
+</html>
