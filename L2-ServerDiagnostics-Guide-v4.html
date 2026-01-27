@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L2 Server Diagnostics Guide v4.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .header { background: linear-gradient(135deg, #5c2d91 0%, #8e44ad 100%); color: white; padding: 40px; border-radius: 10px; margin-bottom: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .header .version { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 15px; }
+        .header .author { margin-top: 10px; font-size: 0.9em; opacity: 0.8; }
+        
+        .nav { background: white; padding: 15px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav ul { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .nav a { color: #5c2d91; text-decoration: none; padding: 8px 15px; border-radius: 5px; transition: all 0.3s; font-size: 14px; }
+        .nav a:hover { background: #5c2d91; color: white; }
+        
+        .section { background: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h2 { color: #5c2d91; border-bottom: 3px solid #5c2d91; padding-bottom: 10px; margin-bottom: 20px; }
+        .section h3 { color: #333; margin: 20px 0 10px 0; }
+        
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0; }
+        .card { background: #f8f4fc; padding: 20px; border-radius: 8px; border-left: 4px solid #5c2d91; }
+        .card h4 { color: #5c2d91; margin-bottom: 10px; }
+        .card.safe { border-left-color: #27ae60; background: #e8f8f0; }
+        .card.warning { border-left-color: #f39c12; background: #fef9e7; }
+        .card.danger { border-left-color: #e74c3c; background: #fdf2f2; }
+        
+        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 8px; margin: 15px 0; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 13px; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .command { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #5c2d91; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f4fc; }
+        
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge-safe { background: #27ae60; color: white; }
+        .badge-warning { background: #f39c12; color: white; }
+        .badge-danger { background: #e74c3c; color: white; }
+        .badge-info { background: #3498db; color: white; }
+        .badge-new { background: #9b59b6; color: white; }
+        
+        .checklist { list-style: none; }
+        .checklist li { padding: 10px 0; padding-left: 30px; position: relative; }
+        .checklist li::before { content: "☐"; position: absolute; left: 0; color: #5c2d91; font-size: 1.2em; }
+        
+        .alert { padding: 15px 20px; border-radius: 8px; margin: 15px 0; }
+        .alert-safe { background: #d4edda; border-left: 4px solid #27ae60; color: #155724; }
+        .alert-warning { background: #fff3cd; border-left: 4px solid #f39c12; color: #856404; }
+        .alert-danger { background: #f8d7da; border-left: 4px solid #e74c3c; color: #721c24; }
+        .alert-info { background: #d1ecf1; border-left: 4px solid #3498db; color: #0c5460; }
+        
+        .footer { text-align: center; padding: 30px; color: #666; }
+        
+        @media print { .nav { display: none; } .section { break-inside: avoid; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 L2 Server Diagnostics Guide</h1>
+            <p class="subtitle">Comprehensive Windows Server Troubleshooting for L2 Support</p>
+            <span class="version">Version 4.0 - Enhanced</span>
+            <p class="author">Author: Syed Rizvi | Last Updated: January 2026</p>
+        </div>
+        
+        <nav class="nav">
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#scripts">Scripts</a></li>
+                <li><a href="#checks">25 Checks</a></li>
+                <li><a href="#security-tools">Security Tools</a></li>
+                <li><a href="#new-features">New in v4.0</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+                <li><a href="#commands">Commands</a></li>
+                <li><a href="#escalation">Escalation</a></li>
+            </ul>
+        </nav>
+        
+        <section class="section" id="overview">
+            <h2>📋 Overview</h2>
+            <p>This guide provides L2 support staff with safe, effective tools for diagnosing and resolving common Windows Server issues.</p>
+            
+            <div class="card-grid">
+                <div class="card safe">
+                    <h4>✅ AUDIT Script (Read-Only)</h4>
+                    <p>Safely collects diagnostic information without making any changes. Creates CSV and HTML reports.</p>
+                    <p><strong>25 comprehensive checks!</strong></p>
+                    <p><span class="badge badge-safe">SAFE FOR L2</span></p>
+                </div>
+                <div class="card warning">
+                    <h4>🔧 FIX Script (With Prompts)</h4>
+                    <p>Fixes common issues with prompts before each action. 12 safe fix operations.</p>
+                    <p><span class="badge badge-warning">REQUIRES APPROVAL</span></p>
+                </div>
+            </div>
+            
+            <div class="alert alert-safe">
+                <strong>✓ SAFE:</strong> Both scripts are designed to be safe for L2 use. No dangerous commands like KILL, PURGE machine accounts, or forceful resets are included.
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>📁 Reports save to TWO locations:</strong><br>
+                1. Desktop (default)<br>
+                2. C:\L2_Reports (always)
+            </div>
+        </section>
+        
+        <section class="section" id="scripts">
+            <h2>📜 Scripts</h2>
+            
+            <h3>1. Audit Script (L2-ServerDiagnostics-Audit-v4.ps1)</h3>
+            <p>Run this FIRST to identify issues.</p>
+            
+            <div class="code-block">
+<span class="comment"># Run the audit script (READ-ONLY)</span>
+<span class="command">.\L2-ServerDiagnostics-Audit-v4.ps1</span>
+
+<span class="comment"># Specify custom output path</span>
+<span class="command">.\L2-ServerDiagnostics-Audit-v4.ps1</span> -OutputPath <span class="string">"C:\Reports"</span>
+            </div>
+            
+            <p><strong>Output Files (saved to BOTH locations):</strong></p>
+            <ul>
+                <li><code>L2_Audit_COMPUTERNAME_timestamp.csv</code> - For Excel analysis</li>
+                <li><code>L2_Audit_COMPUTERNAME_timestamp.html</code> - Visual report</li>
+            </ul>
+            
+            <h3>2. Fix Script (L2-ServerDiagnostics-Fix-v4.ps1)</h3>
+            <p>Run this AFTER the audit to fix identified issues.</p>
+            
+            <div class="code-block">
+<span class="comment"># Run the fix script (PROMPTS before each action)</span>
+<span class="command">.\L2-ServerDiagnostics-Fix-v4.ps1</span>
+            </div>
+            
+            <div class="alert alert-warning">
+                <strong>⚠️ IMPORTANT:</strong> The fix script will PROMPT you before each action. Read carefully and approve only what you understand.
+            </div>
+        </section>
+        
+        <section class="section" id="checks">
+            <h2>🔍 25 Checks Performed</h2>
+            
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>Category</th>
+                    <th>Check</th>
+                    <th>Why It Matters</th>
+                </tr>
+                <tr><td>1</td><td>System</td><td>System Information</td><td>Basic server info, uptime</td></tr>
+                <tr><td>2</td><td>Activation</td><td>Windows Activation <span class="badge badge-new">NEW</span></td><td>Unlicensed = compliance issue</td></tr>
+                <tr><td>3</td><td>Domain</td><td>Trust Relationship</td><td>Broken trust = users can't log in</td></tr>
+                <tr><td>4</td><td>GPO</td><td>Group Policy Status</td><td>GPO errors cause policy failures</td></tr>
+                <tr><td>5</td><td>Replication</td><td>AD Replication (DC only)</td><td>Replication failures affect domain</td></tr>
+                <tr><td>6</td><td>CPU</td><td>CPU Usage <span class="badge badge-new">NEW</span></td><td>High CPU = performance problems</td></tr>
+                <tr><td>7</td><td>Processes</td><td>Top Processes <span class="badge badge-new">NEW</span></td><td>Shows what's eating CPU/Memory</td></tr>
+                <tr><td>8</td><td>Memory</td><td>RAM Usage</td><td>High memory = performance issues</td></tr>
+                <tr><td>9</td><td>PageFile</td><td>Page File Usage <span class="badge badge-new">NEW</span></td><td>Low page file = crashes</td></tr>
+                <tr><td>10</td><td>Disk</td><td>Disk Space</td><td>Low space causes failures</td></tr>
+                <tr><td>11</td><td>Services</td><td>Critical Services</td><td>Stopped services = issues</td></tr>
+                <tr><td>12</td><td>NIC Team</td><td>NIC Teaming Status <span class="badge badge-new">NEW</span></td><td>Broken team = network issues</td></tr>
+                <tr><td>13</td><td>SSL Certs</td><td>Certificate Expiration <span class="badge badge-new">NEW</span></td><td>Expired certs = app outages</td></tr>
+                <tr><td>14</td><td>Security</td><td>Security Tools (Trellix, Trend, Nessus)</td><td>Must be running for compliance</td></tr>
+                <tr><td>15</td><td>Time</td><td>Time Synchronization</td><td>Time drift breaks Kerberos</td></tr>
+                <tr><td>16</td><td>Reboot</td><td>Pending Reboot</td><td>May cause unstable behavior</td></tr>
+                <tr><td>17</td><td>RDP</td><td>RDP Configuration</td><td>RDP issues = no remote access</td></tr>
+                <tr><td>18</td><td>Firewall</td><td>Firewall Status</td><td>Firewall state check</td></tr>
+                <tr><td>19</td><td>Tasks</td><td>Failed Scheduled Tasks <span class="badge badge-new">NEW</span></td><td>Broken tasks = missed jobs</td></tr>
+                <tr><td>20</td><td>Backup</td><td>Windows Backup Status <span class="badge badge-new">NEW</span></td><td>Is backup working?</td></tr>
+                <tr><td>21</td><td>Security</td><td>Failed Login Attempts <span class="badge badge-new">NEW</span></td><td>Brute force detection</td></tr>
+                <tr><td>22</td><td>Events</td><td>Last 20 Event Errors</td><td>Recent system problems</td></tr>
+                <tr><td>23</td><td>Network</td><td>Network Connectivity</td><td>DC/DNS reachability</td></tr>
+                <tr><td>24</td><td>Patches</td><td>Patch Status</td><td>Unpatched = vulnerable</td></tr>
+                <tr><td>25</td><td>Summary</td><td>Summary Statistics</td><td>Overall health score</td></tr>
+            </table>
+        </section>
+        
+        <section class="section" id="security-tools">
+            <h2>🛡️ Security Tools Checked</h2>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Tenable Nessus Agent</h4>
+                    <p>Service: <code>Tenable Nessus Agent</code></p>
+                    <p>Checks: Running status + Link status</p>
+                </div>
+                <div class="card">
+                    <h4>Trellix (McAfee)</h4>
+                    <p>Services: <code>macmnsvc, masvc, mfefire, mfemms, McShield</code></p>
+                    <p>Checks: 7 services + ePO connection</p>
+                </div>
+                <div class="card">
+                    <h4>Trend Micro</h4>
+                    <p>Services: <code>ds_agent, TmListen, ntrtscan</code></p>
+                    <p>Checks: 6 services + DSA Manager</p>
+                </div>
+                <div class="card">
+                    <h4>CrowdStrike Falcon</h4>
+                    <p>Service: <code>CSFalconService</code></p>
+                </div>
+                <div class="card">
+                    <h4>Windows Defender</h4>
+                    <p>Service: <code>WinDefend</code></p>
+                </div>
+            </div>
+            
+            <h3>Nessus Agent Commands</h3>
+            <div class="code-block">
+<span class="comment"># Check Nessus Agent status</span>
+cd <span class="string">"C:\Program Files\Tenable\Nessus Agent"</span>
+<span class="command">.\nessuscli.exe</span> agent status
+
+<span class="comment"># If not linked (requires linking key from Tenable.io)</span>
+<span class="command">.\nessuscli.exe</span> agent link --key=YOUR_KEY --host=cloud.tenable.com --port=443
+            </div>
+        </section>
+        
+        <section class="section" id="new-features">
+            <h2>🆕 New in Version 4.0</h2>
+            
+            <div class="card-grid">
+                <div class="card safe">
+                    <h4>✅ Windows Activation Check</h4>
+                    <p>Detects if Windows is licensed or not - compliance requirement</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ CPU Usage Monitoring</h4>
+                    <p>Real-time CPU percentage with warning thresholds (80%/90%)</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Top Processes</h4>
+                    <p>Shows top 5 CPU and top 5 Memory consuming processes</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Page File Usage</h4>
+                    <p>Checks virtual memory/page file health</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ NIC Teaming Status</h4>
+                    <p>Checks if NIC teams are UP and all members active</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ SSL Certificate Expiration</h4>
+                    <p>Finds expired and expiring certificates (30/90 day warning)</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Failed Scheduled Tasks</h4>
+                    <p>Lists tasks that failed in the last 7 days</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Windows Backup Status</h4>
+                    <p>Checks if Windows Server Backup is successful</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Failed Login Attempts</h4>
+                    <p>Security check - detects brute force attempts (24h)</p>
+                </div>
+                <div class="card safe">
+                    <h4>✅ Dual Location Saving</h4>
+                    <p>Reports save to Desktop AND C:\L2_Reports</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section" id="troubleshooting">
+            <h2>🔧 Common Issues & Fixes</h2>
+            
+            <h3>Issue: Trust Relationship Broken</h3>
+            <div class="card warning">
+                <h4>Symptoms</h4>
+                <ul>
+                    <li>"The trust relationship between this workstation and the primary domain failed"</li>
+                    <li>Users cannot log in with domain accounts</li>
+                </ul>
+                <h4>Fix (L2 Can Do)</h4>
+                <p>Run the FIX script and approve Trust Repair, OR:</p>
+                <div class="code-block">
+<span class="command">Test-ComputerSecureChannel</span> -Repair -Credential (Get-Credential)
+                </div>
+            </div>
+            
+            <h3>Issue: High CPU Usage</h3>
+            <div class="card safe">
+                <h4>Symptoms</h4>
+                <ul>
+                    <li>Server slow/unresponsive</li>
+                    <li>CPU > 80% in audit report</li>
+                </ul>
+                <h4>Investigation (L2 Can Do)</h4>
+                <div class="code-block">
+<span class="comment"># Check top CPU processes</span>
+<span class="command">Get-Process</span> | Sort-Object CPU -Descending | Select -First 10
+
+<span class="comment"># Check specific process</span>
+<span class="command">Get-Process</span> -Name "processname" | Format-List *
+                </div>
+            </div>
+            
+            <h3>Issue: SSL Certificate Expired</h3>
+            <div class="card warning">
+                <h4>Symptoms</h4>
+                <ul>
+                    <li>Application errors</li>
+                    <li>HTTPS failures</li>
+                    <li>Certificate warnings in audit</li>
+                </ul>
+                <h4>Check (L2 Can Do)</h4>
+                <div class="code-block">
+<span class="comment"># List expiring certificates</span>
+<span class="command">Get-ChildItem</span> Cert:\LocalMachine\My | 
+    Where-Object { $_.NotAfter -lt (Get-Date).AddDays(30) } |
+    Select Subject, NotAfter
+                </div>
+                <p><strong>Note:</strong> Certificate renewal typically requires L3 or app team.</p>
+            </div>
+            
+            <h3>Issue: Failed Logins (Possible Brute Force)</h3>
+            <div class="card danger">
+                <h4>Symptoms</h4>
+                <ul>
+                    <li>>50 failed logins in 24h in audit report</li>
+                    <li>Account lockouts</li>
+                </ul>
+                <h4>Investigation (L2 Can Do)</h4>
+                <div class="code-block">
+<span class="comment"># Get failed login details</span>
+<span class="command">Get-WinEvent</span> -FilterHashtable @{LogName='Security'; Id=4625} -MaxEvents 50 |
+    Select TimeCreated, Message
+                </div>
+                <p><strong>Escalate to Security team if >50 attempts!</strong></p>
+            </div>
+        </section>
+        
+        <section class="section" id="commands">
+            <h2>⚡ Quick Reference Commands</h2>
+            
+            <h3>Safe Commands for L2</h3>
+            <table>
+                <tr><th>Purpose</th><th>Command</th></tr>
+                <tr><td>Check trust</td><td><code>Test-ComputerSecureChannel</code></td></tr>
+                <tr><td>Refresh GPO</td><td><code>gpupdate /force</code></td></tr>
+                <tr><td>Check GPO</td><td><code>gpresult /r</code></td></tr>
+                <tr><td>Sync time</td><td><code>w32tm /resync /force</code></td></tr>
+                <tr><td>Flush DNS</td><td><code>Clear-DnsClientCache</code></td></tr>
+                <tr><td>Register DNS</td><td><code>ipconfig /registerdns</code></td></tr>
+                <tr><td>Check services</td><td><code>Get-Service | Where Status -eq Stopped</code></td></tr>
+                <tr><td>Start service</td><td><code>Start-Service -Name "ServiceName"</code></td></tr>
+                <tr><td>Check CPU</td><td><code>Get-WmiObject Win32_Processor | Select LoadPercentage</code></td></tr>
+                <tr><td>Check memory</td><td><code>Get-WmiObject Win32_OperatingSystem | Select FreePhysicalMemory</code></td></tr>
+                <tr><td>Check disk</td><td><code>Get-PSDrive C | Select Used,Free</code></td></tr>
+                <tr><td>Recent errors</td><td><code>Get-WinEvent -LogName System -MaxEvents 20 | Where Level -eq 2</code></td></tr>
+                <tr><td>Check certs</td><td><code>Get-ChildItem Cert:\LocalMachine\My</code></td></tr>
+                <tr><td>Check NIC team</td><td><code>Get-NetLbfoTeam</code></td></tr>
+                <tr><td>Failed tasks</td><td><code>Get-ScheduledTask | Get-ScheduledTaskInfo | Where LastTaskResult -ne 0</code></td></tr>
+            </table>
+            
+            <div class="alert alert-danger">
+                <strong>🚫 DO NOT USE (L3 Only):</strong>
+                <ul>
+                    <li><code>Reset-ComputerMachinePassword</code> - Can break trust permanently</li>
+                    <li><code>netdom reset</code> - Dangerous if misused</li>
+                    <li><code>Remove-Computer</code> - Removes from domain</li>
+                    <li><code>nltest /sc_reset</code> - Can cause issues</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="section" id="escalation">
+            <h2>📞 When to Escalate to L3</h2>
+            
+            <div class="card danger">
+                <h4>Escalate Immediately If:</h4>
+                <ul class="checklist">
+                    <li>Trust repair fails multiple times</li>
+                    <li>AD replication failures detected (on DC)</li>
+                    <li>Multiple DCs showing issues</li>
+                    <li>Cannot contact ANY domain controller</li>
+                    <li>CPU consistently >90% with no obvious cause</li>
+                    <li>SSL certificates expired for critical apps</li>
+                    <li>>50 failed logins (possible attack)</li>
+                    <li>NIC team completely down</li>
+                    <li>Security tools cannot be started</li>
+                    <li>Server cannot boot or blue screens</li>
+                </ul>
+            </div>
+            
+            <h3>Information to Provide When Escalating</h3>
+            <ul>
+                <li>✅ Audit report (HTML/CSV from both locations)</li>
+                <li>✅ Steps already taken</li>
+                <li>✅ Error messages (screenshots)</li>
+                <li>✅ Server name and IP</li>
+                <li>✅ Time issue started</li>
+                <li>✅ Any recent changes</li>
+            </ul>
+        </section>
+        
+        <div class="footer">
+            <p><strong>L2 Server Diagnostics Guide v4.0</strong></p>
+            <p>Author: Syed Rizvi | © 2026</p>
+            <p>For internal use only</p>
+        </div>
+    </div>
+</body>
+</html>
