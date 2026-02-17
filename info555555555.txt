@@ -1,0 +1,43 @@
+# Set variables
+$BucketName = "ns2-il5-s4-support0001-sc-ssm-patching"
+$S3Prefix = "windows_patch/feb-2026"
+$LocalPath = "C:\Temp\Patches"
+$Region = "us-gov-west-1"
+
+# Create local folder
+New-Item -ItemType Directory -Path $LocalPath -Force
+
+# Get all files from S3
+Write-Host "Getting file list from S3..." -ForegroundColor Cyan
+$s3Files = Get-S3Object -BucketName $BucketName -KeyPrefix $S3Prefix -Region $Region
+
+Write-Host "Found $($s3Files.Count) files" -ForegroundColor Yellow
+
+# Download each file
+foreach ($file in $s3Files) {
+    $fileName = Split-Path $file.Key -Leaf
+    if ($fileName) {
+        $localFile = Join-Path $LocalPath $fileName
+        Write-Host "Downloading: $fileName" -ForegroundColor Yellow
+        
+        Read-S3Object -BucketName $BucketName -Key $file.Key -File $localFile -Region $Region
+        
+        Write-Host "  SUCCESS!" -ForegroundColor Green
+    }
+}
+
+Write-Host ""
+Write-Host "DOWNLOAD COMPLETE!" -ForegroundColor Green
+Write-Host "Files at: $LocalPath" -ForegroundColor Cyan
+Get-ChildItem $LocalPath | Format-Table Name, Length
+
+---------------------------------------------------------------------------
+
+Get-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -KeyPrefix "windows_patch/feb-2026" -Region "us-gov-west-1" | ForEach-Object { $fileName = Split-Path $_.Key -Leaf; if($fileName){ Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key $_.Key -File "C:\Temp\Patches\$fileName" -Region "us-gov-west-1"; Write-Host "Downloaded: $fileName" -ForegroundColor Green } }
+
+
+--------------------------------------------------------
+
+
+Get-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -KeyPrefix "windows_patch/feb-2026" -Region "us-gov-west-1" | ForEach-Object { $fileName = Split-Path $_.Key -Leaf; if($fileName){ Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key $_.Key -File "C:\Temp\Patches\$fileName" -Region "us-gov-west-1"; Write-Host "Downloaded: $fileName" -ForegroundColor Green } }
+
