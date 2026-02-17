@@ -8,3 +8,17 @@ aws s3 cp "C:\Users\c5406751\feb-2026" "s3://ns2-il5-s4-support0001-sc-ssm-patch
 cd C:\Users\c5406751
 aws s3 cp feb-2026 s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/
 
+-------------------------------------------------------------------------------------------------------
+
+
+aws s3 cp "C:\Users\c5406751\feb-2026.zip" "s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/feb-2026.zip"
+
+-----------------------------------------------------------------------------------------------
+
+aws s3 cp "C:\Users\c5406751\feb-2026 (2).zip" "s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/feb-2026.zip"
+
+------------------------------------------------------------------------------------
+
+cd C:\Users\c5406751
+dir feb*.zip
+aws s3 cp "feb-2026.zip" "s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/feb-2026.zip"
