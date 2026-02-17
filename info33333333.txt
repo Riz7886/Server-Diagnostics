@@ -1,0 +1,31 @@
+New-Item "C:\Temp\Patches" -ItemType Directory -Force; aws s3 cp "s3://ns2-il5-s4-support0001-sc-ssm-patching/windows_patch/feb-2026/" "C:\Temp\Patches\feb-2026" --recursive; Write-Host "DOWNLOAD COMPLETE! Files at: C:\Temp\Patches\feb-2026" -ForegroundColor Green; Get-ChildItem "C:\Temp\Patches\feb-2026" -Recurse | Format-Table Name, Length
+```
+
+---
+
+## **📋 STEP-BY-STEP:**
+
+### **1. ON THE SERVER - OPEN POWERSHELL:**
+- Click Start menu
+- Type "PowerShell"
+- Right-click → Run as Administrator
+
+### **2. PASTE THE COMMAND ABOVE**
+- Right-click in PowerShell to paste
+- Press Enter
+
+### **3. WAIT FOR DOWNLOAD**
+- 1.7 GB will take 2-5 minutes
+- You'll see files downloading
+
+### **4. YOU'LL SEE:**
+```
+DOWNLOAD COMPLETE! Files at: C:\Temp\Patches\feb-2026
+
+Name                          Length
+----                          ------
+GoogleChromeStandalone...     134,800,000
+MicrosoftEdgeEnterprise...    183,800,000
+mpam-fe.exe                   199,700,000
+windows10.0-kb5075904.msu     711,500,000
+---------------------------------------
