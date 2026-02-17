@@ -297,4 +297,4 @@ s3://ms2-115-security-binaries/media/tenable/feb-2026.zip
 ------------------------------------------------------------------------------------------
 
 
-aws s3 cp "C:\Users\c5406751\feb-2026.zip" "s3://ms2-115-security-binaries/media/tenable/feb-2026.zip"
+aws s3 cp "C:\Users\c5406751\feb-2026" "s3://ns2-il5-s4-support0001-sc-ssm-patching/windows_patch/feb-2026.zip"
