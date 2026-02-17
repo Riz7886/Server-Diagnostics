@@ -1,0 +1,42 @@
+# Import module
+Import-Module AWSPowerShell
+
+# Create folder
+New-Item "C:\Temp\Patches" -ItemType Directory -Force | Out-Null
+
+Write-Host "Downloading files from S3..." -ForegroundColor Cyan
+Write-Host ""
+
+# Download each file by EXACT path (from what you uploaded)
+$files = @(
+    "GoogleChromeStandaloneEnterprise64.msi",
+    "MicrosoftEdgeEnterpriseX64.msi",
+    "mpam-fe.exe",
+    "mpam-fe.exe.filep...",
+    "windows10.0-kb5..."
+)
+
+# Try downloading the main files
+try {
+    Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/feb-2026/GoogleChromeStandaloneEnterprise64.msi" -File "C:\Temp\Patches\chrome.msi"
+    Write-Host "Chrome downloaded!" -ForegroundColor Green
+} catch { Write-Host "Chrome failed" -ForegroundColor Red }
+
+try {
+    Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/feb-2026/MicrosoftEdgeEnterpriseX64.msi" -File "C:\Temp\Patches\edge.msi"
+    Write-Host "Edge downloaded!" -ForegroundColor Green
+} catch { Write-Host "Edge failed" -ForegroundColor Red }
+
+try {
+    Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/feb-2026/mpam-fe.exe" -File "C:\Temp\Patches\defender.exe"
+    Write-Host "Defender downloaded!" -ForegroundColor Green
+} catch { Write-Host "Defender failed" -ForegroundColor Red }
+
+try {
+    Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/feb-2026/windows10.0-kb5075904-x64.msu" -File "C:\Temp\Patches\windows-update.msu"
+    Write-Host "Windows Update downloaded!" -ForegroundColor Green
+} catch { Write-Host "Windows Update failed" -ForegroundColor Red }
+
+Write-Host ""
+Write-Host "DONE! Check C:\Temp\Patches" -ForegroundColor Cyan
+Get-ChildItem C:\Temp\Patches
