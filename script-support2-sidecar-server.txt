@@ -1,0 +1,51 @@
+$MonthYear = "feb-2026"
+$LocalFolder = "C:\Users\c5406751\$MonthYear"
+$BucketName = "ns2-il5-s4-support0002-sc-ssm-patching"
+$S3Path = "patches/windows_patch/$MonthYear"
+
+Write-Host "Uploading to 0002 bucket..." -ForegroundColor Cyan
+
+aws s3 cp "$LocalFolder" "s3://$BucketName/$S3Path/" --recursive
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "UPLOAD SUCCESSFUL!" -ForegroundColor Green
+} else {
+    Write-Host "UPLOAD FAILED!" -ForegroundColor Red
+}
+
+---------------------------------------------------------------------------------------
+
+Import-Module AWSPowerShell
+
+$BucketName = "ns2-il5-s4-support0002-sc-ssm-patching"
+$S3Prefix = "patches/windows_patch/feb-2026"
+$LocalPath = "C:\Temp\Patches"
+$Region = "us-gov-west-1"
+
+Write-Host "Downloading patches..." -ForegroundColor Cyan
+
+New-Item -ItemType Directory -Path $LocalPath -Force | Out-Null
+
+# Chrome
+Write-Host "[1/4] Chrome..." -ForegroundColor Yellow
+Read-S3Object -BucketName $BucketName -Key "$S3Prefix/GoogleChromeStandaloneEnterprise64.msi" -File "$LocalPath\chrome.msi" -Region $Region
+Write-Host "  Downloaded!" -ForegroundColor Green
+
+# Edge
+Write-Host "[2/4] Edge..." -ForegroundColor Yellow
+Read-S3Object -BucketName $BucketName -Key "$S3Prefix/MicrosoftEdgeEnterpriseX64.msi" -File "$LocalPath\edge.msi" -Region $Region
+Write-Host "  Downloaded!" -ForegroundColor Green
+
+# Defender
+Write-Host "[3/4] Defender..." -ForegroundColor Yellow
+Read-S3Object -BucketName $BucketName -Key "$S3Prefix/mpam-fe.exe" -File "$LocalPath\defender.exe" -Region $Region
+Write-Host "  Downloaded!" -ForegroundColor Green
+
+# Windows Update
+Write-Host "[4/4] Windows Update..." -ForegroundColor Yellow
+Read-S3Object -BucketName $BucketName -Key "$S3Prefix/windows10.0-kb5075904-x64_2e5ebd48b0f010011e9196e6536a3c78cba8b56f.msu" -File "$LocalPath\KB5075904.msu" -Region $Region
+Write-Host "  Downloaded!" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "COMPLETE!" -ForegroundColor Green
+Get-ChildItem $LocalPath
