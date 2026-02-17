@@ -297,5 +297,4 @@ s3://ms2-115-security-binaries/media/tenable/feb-2026.zip
 ------------------------------------------------------------------------------------------
 
 
-
-$ZipFile="C:\Users\c5406751\feb-2026"; $BucketName="ms2-115-security-binaries"; $S3Key="media/tenable/feb-2026.zip"; Write-Host "Uploading $ZipFile to s3://$BucketName/$S3Key" -ForegroundColor Cyan; aws s3 cp "$ZipFile" "s3://$BucketName/$S3Key"; if($LASTEXITCODE -eq 0){Write-Host "SUCCESS!" -ForegroundColor Green; aws s3 ls "s3://$BucketName/$S3Key"}else{Write-Host "FAILED!" -ForegroundColor Red}
+aws s3 cp "C:\Users\c5406751\feb-2026.zip" "s3://ms2-115-security-binaries/media/tenable/feb-2026.zip"
