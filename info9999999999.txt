@@ -1,0 +1,40 @@
+# Import AWS module
+Import-Module AWSPowerShell
+
+# Set variables
+$BucketName = "ns2-il5-s4-support0001-sc-ssm-patching"
+$S3Prefix = "windows_patch/feb-2026"
+$LocalPath = "C:\Temp\Patches"
+
+# Create folder
+New-Item -ItemType Directory -Path $LocalPath -Force | Out-Null
+
+Write-Host "Getting files from S3..." -ForegroundColor Cyan
+
+# Get all S3 objects
+$s3Files = Get-S3Object -BucketName $BucketName -KeyPrefix $S3Prefix
+
+Write-Host "Found $($s3Files.Count) files" -ForegroundColor Yellow
+Write-Host ""
+
+# Download each file
+foreach ($file in $s3Files) {
+    $fileName = Split-Path $file.Key -Leaf
+    
+    if ($fileName) {
+        $localFile = Join-Path $LocalPath $fileName
+        
+        Write-Host "Downloading: $fileName" -ForegroundColor Yellow
+        
+        Read-S3Object -BucketName $BucketName -Key $file.Key -File $localFile
+        
+        Write-Host "  Downloaded!" -ForegroundColor Green
+    }
+}
+
+Write-Host ""
+Write-Host "COMPLETE!" -ForegroundColor Green
+Write-Host "Files at: $LocalPath" -ForegroundColor Cyan
+Write-Host ""
+
+Get-ChildItem $LocalPath | Format-Table Name, @{Label="Size (MB)";Expression={[math]::Round($_.Length/1MB,2)}}
