@@ -1,0 +1,10 @@
+Get-Item "C:\Users\c5406751\feb-2026" | Select-Object Name, FullName, Extension, Attributes
+
+--------------------------------------------------------
+
+aws s3 cp "C:\Users\c5406751\feb-2026" "s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/feb-2026"
+-----------------------------------------------------------------------------------------------
+
+cd C:\Users\c5406751
+aws s3 cp feb-2026 s3://ns2-il5-s4-support0001-sc-ssm-patching/patches/
+
