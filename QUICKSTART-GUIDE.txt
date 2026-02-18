@@ -1,0 +1,135 @@
+# QUICK START GUIDE - WHICH SCRIPT TO RUN
+
+## YOU HAVE 3 SCRIPTS:
+
+---
+
+## STEP 1: RUN TEST SCRIPT FIRST
+
+**FILE:** TEST-Prerequisites.ps1
+
+**WHAT IT DOES:**
+Tests if all 10 servers can be scanned remotely
+
+**HOW TO RUN:**
+```powershell
+.\TEST-Prerequisites.ps1
+```
+
+**TIME:** 1 minute
+
+**WHAT IT SHOWS:**
+- Server 10.133.39.41: Can Scan? YES or NO
+- Server 10.116.20.98: Can Scan? YES or NO
+- (all 10 servers)
+
+---
+
+## STEP 2A: IF TEST SHOWS ALL "YES" - USE MULTI-SERVER SCRIPT
+
+**FILE:** MultiServer-Agent-Report-READONLY.ps1
+
+**WHAT IT DOES:**
+Scans ALL 10 servers at once from ONE location
+
+**HOW TO RUN:**
+```powershell
+.\MultiServer-Agent-Report-READONLY.ps1
+```
+
+**TIME:** 2-5 minutes
+
+**RESULT:**
+- ONE report with all 10 servers
+- Report location: C:\Temp\MultiServer_AgentReport_[timestamp].html
+
+**THIS IS WHAT YOU WANT!**
+
+---
+
+## STEP 2B: IF TEST SHOWS ANY "NO" - USE SINGLE SERVER SCRIPT
+
+**FILE:** SingleServer-RELIABLE.ps1
+
+**WHAT IT DOES:**
+Scans ONE server at a time (the server you run it on)
+
+**HOW TO RUN:**
+Log into each server and run:
+```powershell
+.\SingleServer-RELIABLE.ps1
+```
+
+**TIME:** 3 minutes per server (30 minutes for 10 servers)
+
+**RESULT:**
+- 10 separate reports (one per server)
+- Report location: C:\Temp\AgentReport_[ServerName]_[timestamp].html
+
+**THIS IS THE BACKUP IF WINRM IS OFF**
+
+---
+
+## SIMPLE WORKFLOW:
+
+```
+1. Run TEST-Prerequisites.ps1
+   |
+   v
+2. Check results
+   |
+   +---> All servers show "YES"? 
+   |     |
+   |     v
+   |     Run MultiServer-Agent-Report-READONLY.ps1
+   |     (ONE TIME, ALL SERVERS, 2 MINUTES)
+   |     DONE!
+   |
+   +---> Some/All servers show "NO"?
+         |
+         v
+         Log into each server
+         Run SingleServer-RELIABLE.ps1
+         (10 TIMES, ONE SERVER EACH, 30 MINUTES)
+         DONE!
+```
+
+---
+
+## YOUR 10 SERVERS (ALREADY IN MULTI-SERVER SCRIPT):
+
+1. 10.133.39.41
+2. 10.116.20.98
+3. 10.116.52.137
+4. 10.174.8.24
+5. 10.174.16.13
+6. 10.133.7.16
+7. 10.133.39.23
+8. 10.116.33.62
+9. 10.116.21.83
+10. 10.116.52.11
+
+---
+
+## ALL SCRIPTS ARE:
+
+- 100% READ-ONLY
+- NO changes made to servers
+- NO installations
+- NO updates
+- SAFE for production
+
+---
+
+## START HERE:
+
+```powershell
+.\TEST-Prerequisites.ps1
+```
+
+**IT WILL TELL YOU WHICH SCRIPT TO USE NEXT!**
+
+---
+
+Created by: Syed Rizvi
+Date: February 18, 2026
