@@ -1,0 +1,100 @@
+# HOW TO RUN FOR TONY
+
+## SCRIPT: Get-PasswordNeverExpires-AZURE-ONLY.ps1
+
+---
+
+## WHAT IT DOES:
+Gets all Azure AD users with password expiration disabled (DisablePasswordExpiration)
+Creates CSV file on your Desktop
+Opens CSV automatically
+
+---
+
+## HOW TO RUN:
+
+1. Right-click PowerShell → Run as Administrator
+
+2. Run this command:
+```powershell
+.\Get-PasswordNeverExpires-AZURE-ONLY.ps1
+```
+
+3. Sign in to Azure AD when prompted
+
+4. Wait for CSV to be created (1-2 minutes)
+
+5. CSV will open automatically
+
+6. Send CSV to Tony Schlak
+
+---
+
+## CSV CONTAINS:
+
+- Display Name
+- User Principal Name  
+- Email
+- Account Enabled (True/False)
+- Password Policy (shows "DisablePasswordExpiration")
+- Department
+- Job Title
+- Account Created Date
+- User ID
+
+---
+
+## EXAMPLE OUTPUT:
+
+```
+Connecting to Microsoft Entra ID (Azure AD)...
+  Connected successfully
+
+Retrieving all users from Azure AD...
+  Retrieved 450 total users
+
+Filtering users with password expiration disabled...
+  Found 38 users with password expiration disabled
+
+Creating CSV export...
+  CSV file created successfully
+
+Total users with password expiration disabled: 38
+
+Account Status:
+  Enabled:  35
+  Disabled: 3
+
+CSV file location:
+  C:\Users\SyedRizvi\Desktop\PasswordNeverExpires_Users_20260218_180000.csv
+
+CSV file opened automatically
+
+Send this file to Tony Schlak
+
+DONE
+```
+
+---
+
+## SEND TO TONY:
+
+Subject: CSV of Users with Password Expiration Disabled
+
+Body:
+Hi Tony,
+
+Attached is the CSV of all users who have "DisablePasswordExpiration" in their password policy.
+
+Total users: 38
+- Enabled: 35
+- Disabled: 3
+
+Let me know if you need anything else.
+
+Thanks,
+Syed
+
+---
+
+## THAT'S IT - SUPER SIMPLE!
