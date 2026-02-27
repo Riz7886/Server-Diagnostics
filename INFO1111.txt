@@ -1,0 +1,1 @@
+PowerShell -ExecutionPolicy Bypass -File "ULTIMATE-Patch-Scanner-CLEAN.ps1"
