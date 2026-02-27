@@ -1,0 +1,1 @@
+PowerShell -ExecutionPolicy Bypass -File "Patch-Scanner-WITH-COMPARISON.ps1" -ScanPath "C:\Reports-alerts"
