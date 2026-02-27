@@ -1,0 +1,1 @@
+PowerShell -ExecutionPolicy Bypass -File "Patch-Scanner-FIXED-v3.ps1"
