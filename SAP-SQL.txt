@@ -1,0 +1,3 @@
+Hey Rick - for .NET, download directly from Microsoft at https://dotnet.microsoft.com/download - grab the latest .NET Runtime and .NET Desktop Runtime for Windows Server. Run the installer as Administrator, no reboot needed in most cases.
+For SQLite - important note: SQLite is NOT a standalone install on the server. It is embedded inside Chrome, Edge, and Tenable Nessus Agent. You do NOT install SQLite separately. To patch the SQLite vulnerability you update Chrome Enterprise, Microsoft Edge, and the Tenable Nessus Agent - that automatically updates the SQLite library bundled inside them.
+Let me send you the full download links and steps in a few minutes.
