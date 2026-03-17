@@ -1,0 +1,7 @@
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/kb-mar-2026.msu" -File "C:\Temp\Patches\mar-2026\kb.msu" -Region "us-gov-west-1"
+Write-Host "KB Downloaded!" -ForegroundColor Green
+
+Start-Process "wusa.exe" -ArgumentList "C:\Temp\Patches\mar-2026\kb.msu /quiet /norestart" -Wait
+Write-Host "KB Installed!" -ForegroundColor Green
+
+Get-HotFix | Where-Object {$_.HotFixID -eq "KB5078752"}
