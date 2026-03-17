@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SAP NS2 IL5 — Monthly Patch Guide</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#0d1b2a; color:#e0e0e0; padding:30px; line-height:1.6; }
+  .header { background:linear-gradient(135deg,#0D2B55,#1A7A4A); padding:40px; border-radius:14px; margin-bottom:32px; text-align:center; }
+  .header h1 { font-size:2.2em; color:#fff; margin-bottom:8px; letter-spacing:1px; }
+  .header p { color:#a8d8a8; font-size:1.05em; }
+  .header .badge { display:inline-block; background:#C0392B; color:#fff; padding:4px 14px; border-radius:20px; font-size:0.8em; font-weight:bold; margin-top:12px; }
+  .step-card { background:#162032; border-radius:12px; padding:28px; margin-bottom:28px; border:1px solid #1e3a5f; }
+  .step-top { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .step-badge { background:#1A7A4A; color:#fff; font-size:0.85em; font-weight:bold; padding:6px 18px; border-radius:20px; }
+  .where-badge { color:#fff; font-size:0.78em; padding:4px 14px; border-radius:20px; }
+  .local    { background:#E65100; }
+  .jumphost { background:#6A1B9A; }
+  .sftp     { background:#00695C; }
+  .new      { background:#C0392B; }
+  .step-card h2 { color:#4CAF50; font-size:1.45em; margin-bottom:8px; }
+  .step-card h3 { color:#64B5F6; font-size:1.05em; margin:20px 0 8px 0; }
+  .step-card p, .step-card li { color:#bbb; margin:6px 0; }
+  .step-card ol, .step-card ul { padding-left:22px; }
+  .step-card li { margin:8px 0; }
+  .alert { border-radius:6px; padding:14px 18px; margin:14px 0; font-size:0.93em; display:flex; gap:10px; align-items:flex-start; }
+  .alert-icon { font-size:1.2em; flex-shrink:0; }
+  .danger  { background:#2a0a0a; border-left:5px solid #C0392B; color:#ff8a80; }
+  .danger strong { color:#ff5252; }
+  .warning { background:#1a1500; border-left:5px solid #F39C12; color:#ffcc80; }
+  .warning strong { color:#ffb300; }
+  .success { background:#0a1f0a; border-left:5px solid #1A7A4A; color:#a5d6a7; }
+  .success strong { color:#66bb6a; }
+  .info    { background:#0a1525; border-left:5px solid #1565C0; color:#90caf9; }
+  .info strong { color:#42a5f5; }
+  .purple  { background:#1a0a2a; border-left:5px solid #6A1B9A; color:#ce93d8; }
+  .purple strong { color:#ab47bc; }
+  .cmd-block { background:#080e18; border:1px solid #1A7A4A; border-left:4px solid #1A7A4A; border-radius:6px; padding:14px 18px; margin:10px 0; position:relative; }
+  .cmd-block pre { color:#00e676; font-family:'Courier New',monospace; font-size:0.9em; white-space:pre-wrap; word-break:break-all; line-height:1.8; }
+  .comment { color:#546e7a !important; font-style:italic; }
+  .copy-btn { position:absolute; top:8px; right:10px; background:#1A7A4A; color:#fff; border:none; padding:4px 14px; border-radius:4px; font-size:0.76em; cursor:pointer; }
+  .copy-btn:hover { background:#2e7d32; }
+  .copy-btn.copied { background:#0277BD; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:0.92em; }
+  th { background:#1A4D2E; color:#a5d6a7; text-align:left; padding:10px 14px; }
+  td { padding:9px 14px; border-bottom:1px solid #1e3a5f; color:#ccc; vertical-align:top; }
+  tr:nth-child(even) td { background:#11202f; }
+  .flow-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:16px 0; }
+  .flow-box { flex:1; min-width:150px; background:#0a1525; border-radius:8px; padding:14px; text-align:center; }
+  .flow-box.b1 { border:2px solid #E65100; }
+  .flow-box.b2 { border:2px solid #6A1B9A; }
+  .flow-box.b3 { border:2px solid #00695C; }
+  .flow-box.b4 { border:2px solid #1A7A4A; }
+  .flow-box h4 { font-size:0.82em; margin-bottom:6px; }
+  .flow-box.b1 h4 { color:#FF8A65; }
+  .flow-box.b2 h4 { color:#CE93D8; }
+  .flow-box.b3 h4 { color:#80CBC4; }
+  .flow-box.b4 h4 { color:#4CAF50; }
+  .flow-box p { font-size:0.75em; color:#90caf9; font-family:'Courier New',monospace; line-height:1.5; }
+  .arrow { font-size:1.8em; color:#4CAF50; }
+  .checklist-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #1e3a5f; align-items:flex-start; }
+  .check { width:18px; height:18px; border:2px solid #1A7A4A; border-radius:3px; flex-shrink:0; margin-top:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .check.checked { background:#1A7A4A; }
+  .check.checked::after { content:'✓'; color:#fff; font-size:11px; }
+  .check-label { color:#bbb; font-size:0.92em; }
+  code { background:#0a1525; color:#80cbc4; padding:2px 6px; border-radius:3px; font-family:'Courier New',monospace; font-size:0.88em; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛡️ SAP NS2 IL5 — Monthly Patch Guide</h1>
+  <p>PCE Support Server 1 &amp; 2 · AWS GovCloud · us-gov-west-1</p>
+  <span class="badge">⚠ CONFIDENTIAL — INTERNAL USE ONLY</span>
+</div>
+
+<!-- FLOW -->
+<div class="step-card">
+  <h2 style="color:#64B5F6;">📍 Monthly Patch Flow</h2>
+  <div class="flow-row">
+    <div class="flow-box b1"><h4>💻 LOCAL LAPTOP</h4><p>4 patch files<br>C:\Users\c5406751\mar-2026\<br><br>Run Python HTTP server here</p></div>
+    <div class="arrow">→</div>
+    <div class="flow-box b2"><h4>🖥️ JUMPHOST</h4><p>Download via PowerShell<br>Invoke-WebRequest<br>from laptop HTTP server</p></div>
+    <div class="arrow">→</div>
+    <div class="flow-box b3"><h4>🔒 SecureFX → IL5 SFTP</h4><p>/il5-sms-scanned-artifacts/<br>s4pce/C5406751/mar-2026/</p></div>
+    <div class="arrow">→</div>
+    <div class="flow-box b4"><h4>☁️ S3 BUCKETS</h4><p>support0001 (dated)<br>support0002 (fixed path)</p></div>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div class="step-card">
+  <div class="step-top">
+    <span class="step-badge">STEP 1</span>
+    <span class="where-badge local">💻 LOCAL LAPTOP</span>
+  </div>
+  <h2>Confirm 4 Patch Files Are Ready</h2>
+  <div class="alert success">
+    <span class="alert-icon">✅</span>
+    <div><strong>Already done!</strong> Your 4 files are confirmed at <code>C:\Users\c5406751\mar-2026\</code> on your local laptop and synced to OneDrive. Total: 1.31 GB.</div>
+  </div>
+  <table>
+    <tr><th>File</th><th>Size</th></tr>
+    <tr><td>GoogleChromeStandaloneEnterprise64.msi</td><td>147,344 KB</td></tr>
+    <tr><td>MicrosoftEdgeEnterpriseX64.msi</td><td>197,928 KB</td></tr>
+    <tr><td>mpam-fe.exe</td><td>209,651 KB</td></tr>
+    <tr><td>windows10.0-kb5078752-x64_d19dce98b.msu</td><td>818,745 KB</td></tr>
+  </table>
+</div>
+
+<!-- STEP 2 — Python HTTP Server -->
+<div class="step-card">
+  <div class="step-top">
+    <span class="step-badge">STEP 2</span>
+    <span class="where-badge local">💻 LOCAL LAPTOP</span>
+    <span class="where-badge new">⭐ KEY STEP</span>
+  </div>
+  <h2>Start Python HTTP Server on Local Laptop</h2>
+  <p>This turns your laptop into a temporary file server so the Jumphost can pull the files directly. No copy/paste needed.</p>
+
+  <div class="alert info">
+    <span class="alert-icon">ℹ️</span>
+    <div><strong>Your local laptop IP is: 192.168.1.79</strong> — confirmed from ipconfig. Use this IP in Step 3.</div>
+  </div>
+
+  <h3>Open PowerShell on your LOCAL laptop and run:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre><span class="comment"># Navigate to your patch folder first</span>
+cd C:\Users\c5406751\mar-2026
+
+<span class="comment"># Start the HTTP server — LEAVE THIS WINDOW OPEN</span>
+python -m http.server 8080</pre>
+  </div>
+
+  <div class="alert warning">
+    <span class="alert-icon">⚠️</span>
+    <div><strong>DO NOT CLOSE this PowerShell window</strong> — it must stay open while the Jumphost downloads the files in Step 3. You will see download activity in this window.</div>
+  </div>
+
+  <div class="alert warning">
+    <span class="alert-icon">⚠️</span>
+    <div><strong>If python is not found</strong> — try <code>python3 -m http.server 8080</code> or install Python from <strong>python.org</strong>. Or open Git Bash and run the same command there.</div>
+  </div>
+</div>
+
+<!-- STEP 3 — Download to Jumphost -->
+<div class="step-card">
+  <div class="step-top">
+    <span class="step-badge">STEP 3</span>
+    <span class="where-badge jumphost">🖥️ JUMPHOST — PowerShell as Admin</span>
+    <span class="where-badge new">⭐ KEY STEP</span>
+  </div>
+  <h2>Download Patch Files from Laptop → Jumphost</h2>
+  <p>Open PowerShell <strong>as Administrator</strong> on the Jumphost and run all commands below. This pulls files directly from your laptop's HTTP server.</p>
+
+  <div class="alert danger">
+    <span class="alert-icon">🔴</span>
+    <div><strong>Make sure Step 2 is running first!</strong> The Python HTTP server on your laptop must be active before running these commands.</div>
+  </div>
+
+  <h3>Run this entire block in Jumphost PowerShell as Admin:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre><span class="comment"># Create the folder on Jumphost</span>
+New-Item -ItemType Directory -Path "C:\Users\c5406751\mar-2026" -Force
+
+<span class="comment"># Navigate into it</span>
+cd C:\Users\c5406751\mar-2026
+
+<span class="comment"># Download all 4 files from your laptop (IP: 192.168.1.79)</span>
+Invoke-WebRequest "http://192.168.1.79:8080/GoogleChromeStandaloneEnterprise64.msi" -OutFile "GoogleChromeStandaloneEnterprise64.msi"
+
+Invoke-WebRequest "http://192.168.1.79:8080/MicrosoftEdgeEnterpriseX64.msi" -OutFile "MicrosoftEdgeEnterpriseX64.msi"
+
+Invoke-WebRequest "http://192.168.1.79:8080/mpam-fe.exe" -OutFile "mpam-fe.exe"
+
+Invoke-WebRequest "http://192.168.1.79:8080/windows10.0-kb5078752-x64_d19dce98b.msu" -OutFile "windows10.0-kb5078752-x64_d19dce98b.msu"</pre>
+  </div>
+
+  <h3>Verify all 4 files downloaded:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre>dir C:\Users\c5406751\mar-2026</pre>
+  </div>
+
+  <div class="alert success">
+    <span class="alert-icon">✅</span>
+    <div><strong>Success looks like:</strong> All 4 files listed with correct sizes. Go back to your laptop and press <strong>Ctrl+C</strong> to stop the Python server.</div>
+  </div>
+</div>
+
+<!-- STEP 4 — SecureFX -->
+<div class="step-card">
+  <div class="step-top">
+    <span class="step-badge">STEP 4</span>
+    <span class="where-badge sftp">🔒 JUMPHOST → SecureFX → IL5 SFTP</span>
+  </div>
+  <h2>Transfer Patches via SecureFX to IL5 SFTP</h2>
+
+  <div class="alert purple">
+    <span class="alert-icon">🔒</span>
+    <div><strong>SecureFX connects to:</strong> <code>sftp-inbound.sms.il5.sapns2.internal</code> using your IL5 password. This is the approved IL5 transfer method.</div>
+  </div>
+
+  <h3>4a — LEFT panel (Jumphost local) — navigate to:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre>C:\Users\c5406751\mar-2026</pre>
+  </div>
+
+  <h3>4b — RIGHT panel (IL5 SFTP server) — navigate to:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre>/il5-sms-scanned-artifacts/s4pce/C5406751</pre>
+  </div>
+
+  <div class="alert danger">
+    <span class="alert-icon">🔴</span>
+    <div><strong>Must be in YOUR folder!</strong> Right panel must show <code>C5406751</code> — your user ID folder. Do NOT write to other user folders.</div>
+  </div>
+
+  <h3>4c — Create mar-2026 folder on RIGHT panel:</h3>
+  <ol>
+    <li>Right-click in empty space on RIGHT panel</li>
+    <li>Select <strong>New Folder</strong> → name it <code>mar-2026</code></li>
+    <li>Double-click it to open it</li>
+  </ol>
+
+  <h3>4d — Upload files:</h3>
+  <ol>
+    <li>In LEFT panel → press <strong>Ctrl+A</strong> to select all 4 files</li>
+    <li>Press <strong>F5</strong> to upload — OR drag to RIGHT panel</li>
+    <li>Watch <strong>Transfer Queue</strong> at bottom — wait for all Done ✅</li>
+  </ol>
+
+  <div class="alert success">
+    <span class="alert-icon">✅</span>
+    <div><strong>Verify:</strong> Right panel shows 4 files in <code>/il5-sms-scanned-artifacts/s4pce/C5406751/mar-2026/</code> with today's date.</div>
+  </div>
+</div>
+
+<!-- STEP 5 — S3 -->
+<div class="step-card">
+  <div class="step-top">
+    <span class="step-badge">STEP 5</span>
+    <span class="where-badge jumphost">🖥️ JUMPHOST — PowerShell as Admin</span>
+  </div>
+  <h2>Upload from Jumphost → S3 Buckets</h2>
+
+  <h3>Set month variable first:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre>$Month = "mar-2026"</pre>
+  </div>
+
+  <h3>Upload to Server 1 — Dated folder path:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre><span class="comment"># SERVER 1 — path includes the month folder</span>
+aws s3 cp "C:\Users\c5406751\$Month\" "s3://ns2-il5-s4-support0001-sc-ssm-patching/windows_patch/$Month/" --recursive --region us-gov-west-1</pre>
+  </div>
+
+  <h3>Upload to Server 2 — FIXED path, NO date folder:</h3>
+  <div class="alert danger">
+    <span class="alert-icon">🔴</span>
+    <div><strong>Server 2 NEVER uses a date subfolder!</strong> Path is always <code>patches/windows_patch/</code> — never add mar-2026 here.</div>
+  </div>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre><span class="comment"># SERVER 2 — FIXED path only, no month subfolder</span>
+aws s3 cp "C:\Users\c5406751\$Month\" "s3://ns2-il5-s4-support0002-sc-ssm-patching/patches/windows_patch/" --recursive --region us-gov-west-1</pre>
+  </div>
+
+  <h3>Verify both buckets:</h3>
+  <div class="cmd-block">
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <pre><span class="comment"># Verify Server 1</span>
+aws s3 ls "s3://ns2-il5-s4-support0001-sc-ssm-patching/windows_patch/mar-2026/" --region us-gov-west-1
+
+<span class="comment"># Verify Server 2</span>
+aws s3 ls "s3://ns2-il5-s4-support0002-sc-ssm-patching/patches/windows_patch/" --region us-gov-west-1</pre>
+  </div>
+
+  <div class="alert success">
+    <span class="alert-icon">✅</span>
+    <div><strong>Done!</strong> Both buckets show 4 files with today's date. Update your change ticket and close it out.</div>
+  </div>
+</div>
+
+<!-- TROUBLESHOOTING -->
+<div class="step-card">
+  <div class="step-top"><span class="step-badge" style="background:#C0392B;">🔧 TROUBLESHOOTING</span></div>
+  <h2 style="color:#ef5350;">Common Issues &amp; Fixes</h2>
+  <table>
+    <tr><th>Problem</th><th>Fix</th></tr>
+    <tr><td><strong style="color:#ff8a80;">python not recognized on laptop</strong></td><td>Try <code>python3 -m http.server 8080</code> — or open Git Bash and run same command there.</td></tr>
+    <tr><td>Jumphost can't reach 192.168.1.79:8080</td><td>Check your laptop firewall — allow port 8080 inbound temporarily. Or turn off Windows Firewall briefly while transferring.</td></tr>
+    <tr><td>Invoke-WebRequest very slow</td><td>Normal — files are large. Let it run. Check laptop PowerShell window to see download activity.</td></tr>
+    <tr><td>SecureFX permission denied</td><td>Confirm RIGHT panel is inside <code>C5406751</code> folder — your user ID. Do not write to other folders.</td></tr>
+    <tr><td>SecureFX session timed out</td><td>Re-enter IL5 password. Check VPN is still connected.</td></tr>
+    <tr><td>aws s3 cp Access Denied</td><td>Use AWS Console browser on Jumphost → S3 → navigate to bucket → Upload manually.</td></tr>
+    <tr><td>Server 2 wrong path</td><td>Path is <code>patches/windows_patch/</code> ONLY — never add the month folder to Server 2 command.</td></tr>
+  </table>
+</div>
+
+<!-- CHECKLIST -->
+<div class="step-card">
+  <div class="step-top"><span class="step-badge" style="background:#0277BD;">📋 MONTHLY CHECKLIST</span></div>
+  <h2 style="color:#64B5F6;">Patch Day Checklist — March 2026</h2>
+  <div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ LOCAL ] 4 patch files ready in C:\Users\c5406751\mar-2026\</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ LOCAL ] Python HTTP server running on port 8080 — window left open</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ JUMPHOST ] Created C:\Users\c5406751\mar-2026\ folder on Jumphost</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ JUMPHOST ] All 4 files downloaded via Invoke-WebRequest — confirmed with dir command</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ LOCAL ] Stopped Python server (Ctrl+C) after download complete</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ SecureFX LEFT ] Navigated to C:\Users\c5406751\mar-2026\ on Jumphost</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ SecureFX RIGHT ] Navigated to /il5-sms-scanned-artifacts/s4pce/C5406751/</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ SecureFX ] Created mar-2026 folder on RIGHT panel and opened it</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ SecureFX ] All 4 files uploaded — Transfer Queue shows Done</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ S3 ] Uploaded to support0001 — windows_patch/mar-2026/ (dated path)</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ S3 ] Uploaded to support0002 — patches/windows_patch/ (NO date folder)</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ VERIFY ] Both S3 buckets confirmed with 4 files and today's date</span></div>
+    <div class="checklist-item"><div class="check" onclick="toggleCheck(this)"></div><span class="check-label">[ TICKET ] Change ticket updated and closed</span></div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:30px;color:#546e7a;font-size:0.85em;">
+  SAP NS2 IL5 Patching Guide · Updated March 17 2026 · <span style="color:#C0392B;font-weight:bold;">CONFIDENTIAL — INTERNAL USE ONLY</span>
+</div>
+
+<script>
+function copyCmd(btn){
+  const pre = btn.nextElementSibling;
+  const text = pre.innerText.replace(/^#.*\n/gm,'').trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='Copied!'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); },2000);
+  });
+}
+function toggleCheck(el){ el.classList.toggle('checked'); }
+</script>
+</body>
+</html>
