@@ -1,0 +1,23 @@
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "PATCH VERIFICATION REPORT — $(Get-Date)" -ForegroundColor Green
+Write-Host "Server: $env:COMPUTERNAME" -ForegroundColor White
+Write-Host "================================================" -ForegroundColor Cyan
+
+Write-Host "`nCHROME VERSION:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files\Google\Chrome\Application\chrome.exe").VersionInfo.FileVersion
+
+Write-Host "`nEDGE VERSION:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe").VersionInfo.FileVersion
+
+Write-Host "`nDEFENDER LAST UPDATED:" -ForegroundColor Yellow
+Get-MpComputerStatus | Select-Object AntivirusSignatureLastUpdated, AntivirusSignatureVersion, AMProductVersion
+
+Write-Host "`nWINDOWS UPDATES INSTALLED TODAY 3/17/2026:" -ForegroundColor Yellow
+Get-HotFix | Where-Object {$_.InstalledOn -ge "3/17/2026"} | Select-Object HotFixID, Description, InstalledOn
+
+Write-Host "`nLAST 5 WINDOWS UPDATES:" -ForegroundColor Yellow
+Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 5 HotFixID, Description, InstalledOn
+
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "END OF REPORT" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Cyan
