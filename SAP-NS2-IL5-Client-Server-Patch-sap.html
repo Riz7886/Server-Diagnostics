@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IL5 Patch Scripts</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',Arial,sans-serif; background:#0d1b2a; color:#e0e0e0; padding:30px; }
+  .header { background:linear-gradient(135deg,#0D2B55,#1A7A4A); padding:30px; border-radius:12px; margin-bottom:24px; text-align:center; }
+  .header h1 { font-size:1.8em; color:#fff; }
+  .header p { color:#a8d8a8; margin-top:8px; }
+  .card { background:#162032; border-radius:12px; padding:24px; margin-bottom:24px; border:1px solid #1e3a5f; }
+  .card h2 { color:#4CAF50; font-size:1.3em; margin-bottom:10px; }
+  .alert { padding:12px 16px; border-radius:6px; margin:10px 0; font-size:0.9em; }
+  .danger  { background:#2a0a0a; border-left:4px solid #C0392B; color:#ff8a80; }
+  .warning { background:#1a1500; border-left:4px solid #F39C12; color:#ffcc80; }
+  .script-box { background:#080e18; border:1px solid #1A7A4A; border-radius:8px; padding:20px; margin-top:10px; }
+  .script-box pre { color:#00e676; font-family:'Courier New',monospace; font-size:0.85em; line-height:2; white-space:pre-wrap; word-break:break-all; }
+  .cm { color:#546e7a; font-style:italic; }
+  .copy-btn { display:block; width:100%; background:#1A7A4A; color:#fff; border:none; padding:14px; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; margin-top:12px; }
+  .copy-btn:hover { background:#2e7d32; }
+  .copy-btn.copied { background:#0277BD; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛡️ IL5 Patch Scripts — March 2026</h1>
+  <p>Copy script → Paste in Notepad on CLIENT SERVER → Save as C:\patch.ps1 → Run in PowerShell as Admin</p>
+</div>
+
+<div class="card">
+  <div class="alert danger">🔴 MUST run on CLIENT SERVER — PowerShell must show: PS C:\Users\Administrator&gt;</div>
+  <div class="alert warning">⚠️ Comment out Import-Module line if script gets stuck on first line</div>
+</div>
+
+<!-- SCRIPT A — SUPPORT002 -->
+<div class="card">
+  <h2>🖥️ SCRIPT A — Support002 Sidecar Server</h2>
+  <p style="color:#bbb;margin-bottom:8px;">S3 Path: <code style="color:#80cbc4">patches/windows_patch/</code> — NO date folder</p>
+
+  <div class="script-box" id="scriptA"><pre><span class="cm"># IL5 PATCH SCRIPT — SUPPORT002 SIDECAR — March 2026
+# Run as Administrator on CLIENT SERVER only</span>
+
+# Import-Module AWSPowerShell
+
+<span class="cm"># Create new folder</span>
+New-Item -ItemType Directory -Path "C:\Temp\Patches\mar-2026" -Force | Out-Null
+Write-Host "Folder created: C:\Temp\Patches\mar-2026" -ForegroundColor Green
+
+<span class="cm"># Download Chrome</span>
+Write-Host "[1/4] Downloading Chrome..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/GoogleChromeStandaloneEnterprise64.msi" -File "C:\Temp\Patches\mar-2026\chrome.msi" -Region "us-gov-west-1"
+Write-Host "  Chrome downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Edge</span>
+Write-Host "[2/4] Downloading Edge..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/MicrosoftEdgeEnterpriseX64.msi" -File "C:\Temp\Patches\mar-2026\edge.msi" -Region "us-gov-west-1"
+Write-Host "  Edge downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Defender</span>
+Write-Host "[3/4] Downloading Defender..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/mpam-fe.exe" -File "C:\Temp\Patches\mar-2026\defender.exe" -Region "us-gov-west-1"
+Write-Host "  Defender downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Windows KB5078752</span>
+Write-Host "[4/4] Downloading KB5078752..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/windows10.0-kb5078752-x64_d19dce98bd2132ac8dcf4ae644ff36ec1ac7a754.msu" -File "C:\Temp\Patches\mar-2026\kb.msu" -Region "us-gov-west-1"
+Write-Host "  KB downloaded!" -ForegroundColor Green
+
+Write-Host "ALL DOWNLOADED - INSTALLING..." -ForegroundColor Cyan
+
+<span class="cm"># Install Chrome</span>
+Write-Host "Installing Chrome..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\chrome.msi`" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus" -Wait
+Write-Host "  Chrome installed!" -ForegroundColor Green
+
+<span class="cm"># Install Edge</span>
+Write-Host "Installing Edge..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\edge.msi`" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus" -Wait
+Write-Host "  Edge installed!" -ForegroundColor Green
+
+<span class="cm"># Install Defender</span>
+Write-Host "Installing Defender..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\defender.exe`" /quiet /norestart" -Wait
+Write-Host "  Defender installed!" -ForegroundColor Green
+
+<span class="cm"># Install Windows KB</span>
+Write-Host "Installing KB5078752..." -ForegroundColor Yellow
+Start-Process "wusa.exe" -ArgumentList "C:\Temp\Patches\mar-2026\kb.msu /quiet /norestart" -Wait
+Write-Host "  KB installed!" -ForegroundColor Green
+
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "ALL PATCHES DONE!" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Cyan
+
+<span class="cm"># Verify</span>
+Write-Host "Chrome:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files\Google\Chrome\Application\chrome.exe").VersionInfo.FileVersion
+
+Write-Host "Edge:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe").VersionInfo.FileVersion
+
+Write-Host "Defender:" -ForegroundColor Yellow
+Get-MpComputerStatus | Select-Object AntivirusSignatureLastUpdated, AntivirusSignatureVersion
+
+Write-Host "KB check:" -ForegroundColor Yellow
+Get-HotFix | Where-Object {$_.HotFixID -eq "KB5078752"}</pre></div>
+  <button class="copy-btn" onclick="copyScript('scriptA',this)">📋 COPY SCRIPT A — Support002 Sidecar</button>
+</div>
+
+<!-- SCRIPT B — SUPPORT001 -->
+<div class="card">
+  <h2>🖥️ SCRIPT B — Support001 PCE Server</h2>
+  <p style="color:#bbb;margin-bottom:8px;">S3 Path: <code style="color:#80cbc4">windows_patch/mar-2026/</code> — WITH date folder</p>
+
+  <div class="script-box" id="scriptB"><pre><span class="cm"># IL5 PATCH SCRIPT — SUPPORT001 PCE — March 2026
+# Run as Administrator on CLIENT SERVER only</span>
+
+# Import-Module AWSPowerShell
+
+<span class="cm"># Create new folder</span>
+New-Item -ItemType Directory -Path "C:\Temp\Patches\mar-2026" -Force | Out-Null
+Write-Host "Folder created: C:\Temp\Patches\mar-2026" -ForegroundColor Green
+
+<span class="cm"># Download Chrome</span>
+Write-Host "[1/4] Downloading Chrome..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/mar-2026/GoogleChromeStandaloneEnterprise64.msi" -File "C:\Temp\Patches\mar-2026\chrome.msi" -Region "us-gov-west-1"
+Write-Host "  Chrome downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Edge</span>
+Write-Host "[2/4] Downloading Edge..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/mar-2026/MicrosoftEdgeEnterpriseX64.msi" -File "C:\Temp\Patches\mar-2026\edge.msi" -Region "us-gov-west-1"
+Write-Host "  Edge downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Defender</span>
+Write-Host "[3/4] Downloading Defender..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/mar-2026/mpam-fe.exe" -File "C:\Temp\Patches\mar-2026\defender.exe" -Region "us-gov-west-1"
+Write-Host "  Defender downloaded!" -ForegroundColor Green
+
+<span class="cm"># Download Windows KB5078752</span>
+Write-Host "[4/4] Downloading KB5078752..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0001-sc-ssm-patching" -Key "windows_patch/mar-2026/windows10.0-kb5078752-x64_d19dce98bd2132ac8dcf4ae644ff36ec1ac7a754.msu" -File "C:\Temp\Patches\mar-2026\kb.msu" -Region "us-gov-west-1"
+Write-Host "  KB downloaded!" -ForegroundColor Green
+
+Write-Host "ALL DOWNLOADED - INSTALLING..." -ForegroundColor Cyan
+
+<span class="cm"># Install Chrome</span>
+Write-Host "Installing Chrome..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\chrome.msi`" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus" -Wait
+Write-Host "  Chrome installed!" -ForegroundColor Green
+
+<span class="cm"># Install Edge</span>
+Write-Host "Installing Edge..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\edge.msi`" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus" -Wait
+Write-Host "  Edge installed!" -ForegroundColor Green
+
+<span class="cm"># Install Defender</span>
+Write-Host "Installing Defender..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList "/i `"C:\Temp\Patches\mar-2026\defender.exe`" /quiet /norestart" -Wait
+Write-Host "  Defender installed!" -ForegroundColor Green
+
+<span class="cm"># Install Windows KB</span>
+Write-Host "Installing KB5078752..." -ForegroundColor Yellow
+Start-Process "wusa.exe" -ArgumentList "C:\Temp\Patches\mar-2026\kb.msu /quiet /norestart" -Wait
+Write-Host "  KB installed!" -ForegroundColor Green
+
+Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "ALL PATCHES DONE!" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Cyan
+
+<span class="cm"># Verify</span>
+Write-Host "Chrome:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files\Google\Chrome\Application\chrome.exe").VersionInfo.FileVersion
+
+Write-Host "Edge:" -ForegroundColor Yellow
+(Get-Item "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe").VersionInfo.FileVersion
+
+Write-Host "Defender:" -ForegroundColor Yellow
+Get-MpComputerStatus | Select-Object AntivirusSignatureLastUpdated, AntivirusSignatureVersion
+
+Write-Host "KB check:" -ForegroundColor Yellow
+Get-HotFix | Where-Object {$_.HotFixID -eq "KB5078752"}</pre></div>
+  <button class="copy-btn" onclick="copyScript('scriptB',this)">📋 COPY SCRIPT B — Support001 PCE</button>
+</div>
+
+<!-- VERIFY -->
+<div class="card">
+  <h2>🔍 Verify Only</h2>
+  <div class="script-box" id="scriptV"><pre><span class="cm"># Chrome version</span>
+(Get-Item "C:\Program Files\Google\Chrome\Application\chrome.exe").VersionInfo.FileVersion
+
+<span class="cm"># Edge version</span>
+(Get-Item "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe").VersionInfo.FileVersion
+
+<span class="cm"># Defender date — should show 3/17/2026</span>
+Get-MpComputerStatus | Select-Object AntivirusSignatureLastUpdated, AntivirusSignatureVersion
+
+<span class="cm"># KB5078752</span>
+Get-HotFix | Where-Object {$_.HotFixID -eq "KB5078752"}</pre></div>
+  <button class="copy-btn" onclick="copyScript('scriptV',this)">📋 COPY Verify Commands</button>
+</div>
+
+<!-- REBOOT -->
+<div class="card">
+  <h2>🔄 Reboot — Maintenance Window Only!</h2>
+  <div class="alert danger">🔴 ONLY during approved maintenance window!</div>
+  <div class="script-box" id="scriptR"><pre>Restart-Computer -Force</pre></div>
+  <button class="copy-btn" onclick="copyScript('scriptR',this)">📋 COPY Reboot</button>
+</div>
+
+<div style="text-align:center;padding:20px;color:#546e7a;font-size:0.85em;">
+  SAP NS2 IL5 · March 17 2026 · <span style="color:#C0392B;font-weight:bold;">CONFIDENTIAL</span>
+</div>
+
+<script>
+function copyScript(id,btn){
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✅ COPIED! Paste into Notepad on CLIENT SERVER';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},3000);
+  });
+}
+</script>
+</body>
+</html>
