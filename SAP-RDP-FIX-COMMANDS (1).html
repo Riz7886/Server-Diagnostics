@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SAP RDP Fix — 10.168.0.32 — FULL PLAYBOOK</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&display=swap');
+  :root {
+    --bg: #07090f; --panel: #0d1220; --panel2: #0a0f1a; --border: #1a2540;
+    --green: #00ff88; --yellow: #ffd600; --red: #ff4455; --blue: #4fc3f7;
+    --purple: #c084fc; --orange: #ff9800; --white: #e8f0fe; --dim: #4a6080;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--white); font-family:'Barlow',sans-serif; padding:20px; }
+  .top-bar { background:linear-gradient(135deg,#0a1628,#0d2040); border:1px solid var(--border); border-left:4px solid var(--green); border-radius:8px; padding:18px 22px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+  .top-bar h1 { font-size:1.3em; font-weight:900; color:var(--green); letter-spacing:2px; text-transform:uppercase; }
+  .top-bar p { color:var(--dim); font-size:0.78em; margin-top:3px; font-family:'Share Tech Mono'; }
+  .badge { background:rgba(255,68,85,0.15); border:1px solid var(--red); color:var(--red); font-size:0.72em; font-weight:700; padding:4px 12px; border-radius:4px; letter-spacing:1px; }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+  .tab { padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8em; border:1px solid var(--border); background:var(--panel2); color:var(--dim); letter-spacing:1px; transition:all 0.2s; text-transform:uppercase; }
+  .tab:hover { color:var(--white); }
+  .tab.active { background:rgba(0,255,136,0.1); border-color:var(--green); color:var(--green); }
+  .tab.active.red { background:rgba(255,68,85,0.1); border-color:var(--red); color:var(--red); }
+  .tab.active.yellow { background:rgba(255,214,0,0.1); border-color:var(--yellow); color:var(--yellow); }
+  .tab.active.blue { background:rgba(79,195,247,0.1); border-color:var(--blue); color:var(--blue); }
+  .tab.active.purple { background:rgba(192,132,252,0.1); border-color:var(--purple); color:var(--purple); }
+  .tab.active.orange { background:rgba(255,152,0,0.1); border-color:var(--orange); color:var(--orange); }
+  .section { display:none; }
+  .section.active { display:block; }
+  .step { background:var(--panel); border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+  .step-header { display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02); flex-wrap:wrap; gap:8px; }
+  .num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:0.8em; flex-shrink:0; }
+  .num.g { background:var(--green); color:#000; }
+  .num.r { background:var(--red); color:#fff; }
+  .num.y { background:var(--yellow); color:#000; }
+  .num.b { background:var(--blue); color:#000; }
+  .num.p { background:var(--purple); color:#000; }
+  .num.o { background:var(--orange); color:#000; }
+  .step-title { font-weight:700; font-size:0.92em; flex:1; min-width:150px; }
+  .where { font-size:0.68em; font-family:'Share Tech Mono'; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+  .where.azure { background:rgba(79,195,247,0.12); color:var(--blue); border:1px solid rgba(79,195,247,0.3); }
+  .where.jump { background:rgba(0,255,136,0.1); color:var(--green); border:1px solid rgba(0,255,136,0.3); }
+  .where.server { background:rgba(255,68,85,0.12); color:var(--red); border:1px solid rgba(255,68,85,0.3); }
+  .step-body { padding:16px 18px; }
+  .alert { font-size:0.82em; padding:9px 13px; border-radius:5px; margin-bottom:13px; border-left:3px solid; line-height:1.5; }
+  .alert.yellow { color:var(--yellow); background:rgba(255,214,0,0.06); border-color:var(--yellow); }
+  .alert.green { color:var(--green); background:rgba(0,255,136,0.06); border-color:var(--green); }
+  .alert.red { color:var(--red); background:rgba(255,68,85,0.06); border-color:var(--red); }
+  .alert.blue { color:var(--blue); background:rgba(79,195,247,0.06); border-color:var(--blue); }
+  .alert.orange { color:var(--orange); background:rgba(255,152,0,0.06); border-color:var(--orange); }
+  .code-block { background:#04060d; border:1px solid var(--border); border-radius:6px; padding:14px 16px; font-family:'Share Tech Mono',monospace; font-size:0.8em; line-height:1.75; position:relative; margin-bottom:10px; white-space:pre; overflow-x:auto; }
+  .c { color:var(--dim); }
+  .cmd { color:var(--green); }
+  .p { color:var(--blue); }
+  .s { color:var(--yellow); }
+  .v { color:var(--purple); }
+  .copy-btn { position:absolute; top:8px; right:8px; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.35); color:var(--green); font-family:'Barlow',sans-serif; font-size:0.72em; font-weight:700; padding:4px 12px; border-radius:4px; cursor:pointer; transition:all 0.2s; letter-spacing:1px; }
+  .copy-btn:hover { background:rgba(0,255,136,0.2); }
+  .copy-btn.ok { background:rgba(0,255,136,0.3); color:#fff; }
+  .sub-label { font-size:0.85em; color:var(--yellow); font-weight:700; margin:12px 0 6px; }
+  .sub-label.green { color:var(--green); }
+  .sub-label.red { color:var(--red); }
+  .sub-label.orange { color:var(--orange); }
+  .check-row { display:flex; gap:10px; align-items:center; font-size:0.82em; margin-bottom:5px; }
+  .ck { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .ck.g { background:var(--green); box-shadow:0 0 5px var(--green); }
+  .ck.r { background:var(--red); }
+  .ck.y { background:var(--yellow); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  @media(max-width:700px){ .grid2{grid-template-columns:1fr;} }
+  .info-box { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:13px 15px; }
+  .info-box .ib-label { font-size:0.72em; color:var(--dim); font-family:'Share Tech Mono'; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .info-box .ib-val { font-size:0.88em; color:var(--white); font-family:'Share Tech Mono'; }
+  .info-box .ib-val span { color:var(--yellow); }
+  hr { border:none; border-top:1px solid var(--border); margin:13px 0; }
+  .cval { font-family:'Share Tech Mono'; color:var(--green); }
+  .cdesc { color:var(--dim); }
+  .flow { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
+  .flow-item { background:rgba(0,255,136,0.07); border:1px solid rgba(0,255,136,0.25); border-radius:6px; padding:10px 14px; font-size:0.8em; font-weight:700; text-align:center; flex:1; min-width:100px; color:var(--green); }
+  .flow-item sub { display:block; font-size:0.75em; color:var(--dim); font-weight:400; margin-top:2px; }
+  .arrow-sep { color:var(--dim); font-size:1.4em; padding:0 2px; }
+  .new-badge { background:rgba(255,152,0,0.2); border:1px solid var(--orange); color:var(--orange); font-size:0.68em; font-weight:700; padding:2px 8px; border-radius:10px; letter-spacing:1px; margin-left:8px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div>
+    <h1>SAP RDP FIX — FULL PLAYBOOK</h1>
+    <p>Server: 10.168.0.32 | CRE Domain | User: c5406751 | RCA-2026-001 | Prepared by: Syed Rizvi</p>
+  </div>
+  <div class="badge">CONFIDENTIAL</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-current" onclick="show('current','tab-current','')">🔴 CURRENT ERROR</div>
+  <div class="tab" id="tab-main" onclick="show('main','tab-main','')">MAIN FIX</div>
+  <div class="tab" id="tab-azure" onclick="show('azure','tab-azure','red')">AZURE RUN CMD</div>
+  <div class="tab" id="tab-creds" onclick="show('creds','tab-creds','yellow')">CREDENTIALS</div>
+  <div class="tab" id="tab-winrm" onclick="show('winrm','tab-winrm','blue')">WINRM FIX</div>
+  <div class="tab" id="tab-patch" onclick="show('patch','tab-patch','purple')">MANUAL PATCH</div>
+  <div class="tab" id="tab-verify" onclick="show('verify','tab-verify','')">VERIFY</div>
+  <div class="tab" id="tab-emergency" onclick="show('emergency','tab-emergency','red')">EMERGENCY</div>
+</div>
+
+<!-- ===== CURRENT ERROR - NEW TAB ===== -->
+<div class="section active" id="current">
+  <div class="step">
+    <div class="step-header">
+      <div class="num o">!</div>
+      <div class="step-title">CURRENT ERROR: "Initial Program Was Starting" — RDP connects but login fails <span class="new-badge">NEW</span></div>
+      <div class="where azure">Azure Run Command FIRST — No Admin Needed</div>
+    </div>
+    <div class="step-body">
+      <div class="alert orange">Registry Shell + Userinit are CORRECT. TermService is RUNNING. Problem is a broken InitialProgram setting on RDP-Tcp. Fix it via Azure Run Command.</div>
+      <div class="sub-label orange">STEP 1 — Paste in Azure Portal → VM → Run Command → RunPowerShellScript:</div>
+      <div class="code-block" id="cur1"><button class="copy-btn" onclick="cp('cur1',this)">COPY</button><span class="c"># Clear broken initial program settings</span>
+<span class="cmd">reg delete</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v AppSetup /f
+<span class="cmd">reg delete</span> <span class="s">"HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritReconnectSame /t REG_DWORD /d 0 /f
+
+<span class="c"># Restart RDP service</span>
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">Write-Host</span> <span class="s">"DONE - Try RDP now"</span></div>
+
+      <div class="sub-label green">STEP 2 — After Run Command completes, try RDP from jumphost:</div>
+      <div class="code-block" id="cur2"><button class="copy-btn" onclick="cp('cur2',this)">COPY</button><span class="cmd">mstsc</span> /v:10.168.0.32</div>
+
+      <hr>
+      <div class="sub-label">If Azure Run Command still black screen — use Invoke-Command from jumphost normal PowerShell:</div>
+      <div class="code-block" id="cur3"><button class="copy-btn" onclick="cp('cur3',this)">COPY</button><span class="cmd">Invoke-Command</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> (Get-Credential <span class="p">-UserName</span> <span class="s">"CRE\c5406751"</span>) <span class="p">-ScriptBlock</span> {
+  <span class="cmd">reg delete</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v AppSetup /f
+  <span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+  <span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+  <span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+  <span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span>
+  Write-Host <span class="s">"DONE"</span>
+}</div>
+
+      <hr>
+      <div class="sub-label red">What We Know Right Now:</div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">Shell = explorer.exe</span><span class="cdesc"> → CORRECT ✅</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">Userinit = C:\Windows\system32\userinit.exe,</span><span class="cdesc"> → CORRECT ✅</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">TermService = Running</span><span class="cdesc"> → CORRECT ✅</span></div>
+      <div class="check-row"><div class="ck r"></div><span class="cval">InitialProgram = broken</span><span class="cdesc"> → THIS IS THE PROBLEM ❌</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN FIX ===== -->
+<div class="section" id="main">
+  <div class="flow">
+    <div class="flow-item">STEP 1<sub>Azure Run Cmd</sub></div>
+    <div class="arrow-sep">›</div>
+    <div class="flow-item">STEP 2<sub>TrustedHosts</sub></div>
+    <div class="arrow-sep">›</div>
+    <div class="flow-item">STEP 3<sub>Run Fix Script</sub></div>
+    <div class="arrow-sep">›</div>
+    <div class="flow-item">STEP 4<sub>Verify</sub></div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num g">1</div>
+      <div class="step-title">AZURE PORTAL — Run Command (bypasses WinRM completely)</div>
+      <div class="where azure">Azure Portal → VM → Run Command → RunPowerShellScript</div>
+    </div>
+    <div class="step-body">
+      <div class="alert yellow">Black screen for 1-3 min = NORMAL on Azure Government. Do NOT close browser or click Run again.</div>
+      <div class="code-block" id="m1"><button class="copy-btn" onclick="cp('m1',this)">COPY</button><span class="c"># Fix Winlogon registry</span>
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="s">"explorer.exe"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="s">"C:\Windows\system32\userinit.exe,"</span> /f
+
+<span class="c"># Fix InitialProgram</span>
+<span class="cmd">reg delete</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v AppSetup /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+
+<span class="c"># Enable WinRM</span>
+<span class="cmd">Enable-PSRemoting</span> -Force
+<span class="cmd">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="s">"*"</span> -Force
+<span class="cmd">netsh advfirewall firewall add rule</span> name=<span class="s">"WinRM 5985"</span> protocol=TCP dir=in localport=5985 action=allow
+
+<span class="c"># Restart RDP</span>
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">Get-Service</span> TermService | Select Name, Status</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num y">2</div>
+      <div class="step-title">JUMPHOST — Set TrustedHosts</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="m2"><button class="copy-btn" onclick="cp('m2',this)">COPY</button><span class="cmd">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="s">"10.168.0.32"</span> -Force</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num b">3</div>
+      <div class="step-title">JUMPHOST — Run Fix Script</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="sub-label">Option A — Domain account:</div>
+      <div class="code-block" id="m3a"><button class="copy-btn" onclick="cp('m3a',this)">COPY</button><span class="cmd">cd</span> C:\temp
+.\Fix-RDP-SAP-10.168.0.32.ps1 <span class="p">-Mode Fix -Credential</span> (Get-Credential <span class="p">-UserName</span> <span class="s">"CRE\c5406751"</span>)</div>
+      <div class="sub-label">Option B — Full domain:</div>
+      <div class="code-block" id="m3b"><button class="copy-btn" onclick="cp('m3b',this)">COPY</button><span class="cmd">cd</span> C:\temp
+.\Fix-RDP-SAP-10.168.0.32.ps1 <span class="p">-Mode Fix -Credential</span> (Get-Credential <span class="p">-UserName</span> <span class="s">"CRESAPNS2\c5406751"</span>)</div>
+      <div class="sub-label">Option C — Local admin:</div>
+      <div class="code-block" id="m3c"><button class="copy-btn" onclick="cp('m3c',this)">COPY</button><span class="cmd">cd</span> C:\temp
+.\Fix-RDP-SAP-10.168.0.32.ps1 <span class="p">-Mode Fix -Credential</span> (Get-Credential <span class="p">-UserName</span> <span class="s">".\Administrator"</span>)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AZURE RUN CMD ===== -->
+<div class="section" id="azure">
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">!</div>
+      <div class="step-title">VM INFO</div>
+      <div class="where azure">portal.azure.us</div>
+    </div>
+    <div class="step-body">
+      <div class="alert blue">Azure Portal → Search VM → Operations → Run command → RunPowerShellScript</div>
+      <div class="grid2">
+        <div class="info-box"><div class="ib-label">VM Name</div><div class="ib-val"><span>c006app01otpd3ab462fa6fb707d</span></div></div>
+        <div class="info-box"><div class="ib-label">Private IP</div><div class="ib-val"><span>10.168.0.32</span></div></div>
+        <div class="info-box"><div class="ib-label">Instance ID</div><div class="ib-val"><span>i-0d6eaa2e23556252c</span></div></div>
+        <div class="info-box"><div class="ib-label">Region</div><div class="ib-val"><span>gov-west-1a</span></div></div>
+      </div>
+      <div class="alert yellow">Black screen = NORMAL. Azure Government is slow. Wait 3-5 min. Never click Run twice.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">A</div>
+      <div class="step-title">Fix InitialProgram Error — "Error occurred while initial program was starting" <span class="new-badge">NEW</span></div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="az0"><button class="copy-btn" onclick="cp('az0',this)">COPY</button><span class="cmd">reg delete</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v AppSetup /f
+<span class="cmd">reg delete</span> <span class="s">"HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritReconnectSame /t REG_DWORD /d 0 /f
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span>
+Write-Host <span class="s">"DONE - Try RDP now"</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">B</div>
+      <div class="step-title">Enable WinRM Only</div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="az1"><button class="copy-btn" onclick="cp('az1',this)">COPY</button><span class="cmd">Enable-PSRemoting</span> -Force
+<span class="cmd">netsh advfirewall firewall add rule</span> name=<span class="s">"WinRM 5985"</span> protocol=TCP dir=in localport=5985 action=allow
+<span class="cmd">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="s">"*"</span> -Force
+<span class="cmd">Get-Service</span> WinRM</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">C</div>
+      <div class="step-title">Fix RDP Registry + Restart RDP</div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="az2"><button class="copy-btn" onclick="cp('az2',this)">COPY</button><span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="s">"explorer.exe"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="s">"C:\Windows\system32\userinit.exe,"</span> /f
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">D</div>
+      <div class="step-title">Test VM Agent Is Alive (if black screen &gt; 5 min)</div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="alert red">If this also hangs — VM agent is dead. Use Bastion instead.</div>
+      <div class="code-block" id="az3"><button class="copy-btn" onclick="cp('az3',this)">COPY</button><span class="cmd">Get-Service</span> TermService | Select Name, Status
+<span class="cmd">hostname</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREDENTIALS ===== -->
+<div class="section" id="creds">
+  <div class="step">
+    <div class="step-header">
+      <div class="num y">!</div>
+      <div class="step-title">ACCESS DENIED — Try All 4 Formats In Order</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="alert yellow">Access Denied = wrong username format. Try each one. Password = your CRE domain password.</div>
+      <div class="sub-label">Option 1 — CRE\c5406751:</div>
+      <div class="code-block" id="cr1"><button class="copy-btn" onclick="cp('cr1',this)">COPY</button>$<span class="v">cred</span> = Get-Credential <span class="p">-UserName</span> <span class="s">"CRE\c5406751"</span>
+<span class="cmd">Enter-PSSession</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> $<span class="v">cred</span> <span class="p">-Authentication</span> Negotiate</div>
+      <div class="sub-label">Option 2 — CRESAPNS2\c5406751:</div>
+      <div class="code-block" id="cr2"><button class="copy-btn" onclick="cp('cr2',this)">COPY</button>$<span class="v">cred</span> = Get-Credential <span class="p">-UserName</span> <span class="s">"CRESAPNS2\c5406751"</span>
+<span class="cmd">Enter-PSSession</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> $<span class="v">cred</span> <span class="p">-Authentication</span> Negotiate</div>
+      <div class="sub-label">Option 3 — Local Administrator:</div>
+      <div class="code-block" id="cr3"><button class="copy-btn" onclick="cp('cr3',this)">COPY</button>$<span class="v">cred</span> = Get-Credential <span class="p">-UserName</span> <span class="s">".\Administrator"</span>
+<span class="cmd">Enter-PSSession</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> $<span class="v">cred</span> <span class="p">-Authentication</span> Negotiate</div>
+      <div class="sub-label">Option 4 — Kerberos:</div>
+      <div class="code-block" id="cr4"><button class="copy-btn" onclick="cp('cr4',this)">COPY</button>$<span class="v">cred</span> = Get-Credential <span class="p">-UserName</span> <span class="s">"CRE\c5406751"</span>
+<span class="cmd">Enter-PSSession</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> $<span class="v">cred</span> <span class="p">-Authentication</span> Kerberos</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header">
+      <div class="num y">2</div>
+      <div class="step-title">Once Inside PSSession — Full Fix</div>
+      <div class="where server">Inside PSSession [10.168.0.32]:</div>
+    </div>
+    <div class="step-body">
+      <div class="alert green">You will see [10.168.0.32]: prompt when inside. Paste all of this.</div>
+      <div class="code-block" id="cr5"><button class="copy-btn" onclick="cp('cr5',this)">COPY</button><span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="s">"explorer.exe"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="s">"C:\Windows\system32\userinit.exe,"</span> /f
+<span class="cmd">reg delete</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v AppSetup /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">Get-Service</span> TermService | Select Name, Status
+<span class="cmd">Get-ItemProperty</span> <span class="s">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> | Select Shell, Userinit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WINRM FIX ===== -->
+<div class="section" id="winrm">
+  <div class="step">
+    <div class="step-header">
+      <div class="num b">1</div>
+      <div class="step-title">Test WinRM From Jumphost</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="wr1"><button class="copy-btn" onclick="cp('wr1',this)">COPY</button><span class="cmd">Test-NetConnection</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Port</span> 5985
+<span class="cmd">ping</span> 10.168.0.32</div>
+      <hr>
+      <div class="check-row"><div class="ck g"></div><span class="cval">TcpTestSucceeded: True</span><span class="cdesc"> → WinRM open. Run the script.</span></div>
+      <div class="check-row"><div class="ck r"></div><span class="cval">TcpTestSucceeded: False</span><span class="cdesc"> → WinRM blocked. Use Azure Run Command.</span></div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-header">
+      <div class="num b">2</div>
+      <div class="step-title">Fix TrustedHosts on Jumphost</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="wr2"><button class="copy-btn" onclick="cp('wr2',this)">COPY</button><span class="cmd">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="s">"10.168.0.32"</span> -Force
+<span class="cmd">Get-Item</span> WSMan:\localhost\Client\TrustedHosts
+<span class="cmd">Start-Service</span> WinRM</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-header">
+      <div class="num b">3</div>
+      <div class="step-title">Enable WinRM on Server via Azure Run Command</div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="wr3"><button class="copy-btn" onclick="cp('wr3',this)">COPY</button><span class="cmd">Enable-PSRemoting</span> -Force
+<span class="cmd">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="s">"*"</span> -Force
+<span class="cmd">netsh advfirewall firewall add rule</span> name=<span class="s">"WinRM 5985"</span> protocol=TCP dir=in localport=5985 action=allow
+<span class="cmd">Set-NetFirewallRule</span> -Name <span class="s">"WINRM-HTTP-In-TCP"</span> -Enabled True
+<span class="cmd">Restart-Service</span> WinRM -Force
+<span class="cmd">Get-Service</span> WinRM | Select Name, Status</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MANUAL PATCH ===== -->
+<div class="section" id="patch">
+  <div class="step">
+    <div class="step-header">
+      <div class="num p">1</div>
+      <div class="step-title">Check Server Version — Determines Which KB You Need</div>
+      <div class="where jump">Jumphost or PSSession</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="pt1"><button class="copy-btn" onclick="cp('pt1',this)">COPY</button><span class="cmd">Get-ComputerInfo</span> | Select WindowsProductName, OsBuildNumber</div>
+      <hr>
+      <div class="grid2">
+        <div class="info-box"><div class="ib-label">Server 2022</div><div class="ib-val">KB → <span>KB5078766</span></div></div>
+        <div class="info-box"><div class="ib-label">Server 2019</div><div class="ib-val">KB → <span>KB5078938</span></div></div>
+        <div class="info-box"><div class="ib-label">Server 2025</div><div class="ib-val">KB → <span>KB5078740</span></div></div>
+        <div class="info-box"><div class="ib-label">Server 23H2</div><div class="ib-val">KB → <span>KB5078734</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-header">
+      <div class="num p">2</div>
+      <div class="step-title">Copy Patch From Jumphost To Server Then Install</div>
+      <div class="where jump">Jumphost PowerShell</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="pt2"><button class="copy-btn" onclick="cp('pt2',this)">COPY</button>$<span class="v">cred</span> = Get-Credential <span class="p">-UserName</span> <span class="s">"CRE\c5406751"</span>
+$<span class="v">session</span> = New-PSSession <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Credential</span> $<span class="v">cred</span>
+<span class="cmd">Invoke-Command</span> <span class="p">-Session</span> $<span class="v">session</span> <span class="p">-ScriptBlock</span> { New-Item <span class="p">-ItemType</span> Directory <span class="p">-Path</span> <span class="s">"C:\Patches"</span> <span class="p">-Force</span> }
+<span class="cmd">Copy-Item</span> <span class="p">-Path</span> <span class="s">"C:\temp\KB5078766.msu"</span> <span class="p">-Destination</span> <span class="s">"C:\Patches\"</span> <span class="p">-ToSession</span> $<span class="v">session</span>
+<span class="cmd">Invoke-Command</span> <span class="p">-Session</span> $<span class="v">session</span> <span class="p">-ScriptBlock</span> { wusa.exe C:\Patches\KB5078766.msu /quiet /norestart }
+<span class="cmd">Invoke-Command</span> <span class="p">-Session</span> $<span class="v">session</span> <span class="p">-ScriptBlock</span> { Get-HotFix -Id KB5078766 }</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VERIFY ===== -->
+<div class="section" id="verify">
+  <div class="step">
+    <div class="step-header">
+      <div class="num g">✓</div>
+      <div class="step-title">Full Verification — Run All 5 Checks</div>
+      <div class="where jump">Jumphost or PSSession</div>
+    </div>
+    <div class="step-body">
+      <div class="code-block" id="vf1"><button class="copy-btn" onclick="cp('vf1',this)">COPY</button><span class="cmd">Get-Service</span> <span class="p">-Name</span> TermService | Select Name, Status
+<span class="cmd">Get-ItemProperty</span> <span class="s">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> | Select Shell, Userinit
+<span class="cmd">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 5
+<span class="cmd">Get-Service</span> WinRM | Select Name, Status
+<span class="cmd">Test-NetConnection</span> <span class="p">-ComputerName</span> 10.168.0.32 <span class="p">-Port</span> 3389</div>
+      <hr>
+      <div class="sub-label green">All 5 Must Pass:</div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">TermService</span><span class="cdesc"> → Running</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">Shell</span><span class="cdesc"> → explorer.exe</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">Userinit</span><span class="cdesc"> → C:\Windows\system32\userinit.exe,</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">WinRM</span><span class="cdesc"> → Running</span></div>
+      <div class="check-row"><div class="ck g"></div><span class="cval">Port 3389</span><span class="cdesc"> → TcpTestSucceeded: True</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EMERGENCY ===== -->
+<div class="section" id="emergency">
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">A</div>
+      <div class="step-title">RDP BACK IN 30 SECONDS — Azure Run Command</div>
+      <div class="where azure">Azure Run Command</div>
+    </div>
+    <div class="step-body">
+      <div class="alert red">Paste this. RDP comes back in 30 seconds. Patch server AFTER.</div>
+      <div class="code-block" id="em1"><button class="copy-btn" onclick="cp('em1',this)">COPY</button><span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="s">"explorer.exe"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="s">"C:\Windows\system32\userinit.exe,"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span></div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">B</div>
+      <div class="step-title">Azure Run Command Hanging — Use Bastion</div>
+      <div class="where azure">Azure Portal → VM → Connect → Bastion</div>
+    </div>
+    <div class="step-body">
+      <div class="alert blue">Username format in Bastion: c5406751@cre.sapns2.us (NOT CRE\c5406751)</div>
+      <div class="code-block" id="em2"><button class="copy-btn" onclick="cp('em2',this)">COPY</button><span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="s">"explorer.exe"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="s">"C:\Windows\system32\userinit.exe,"</span> /f
+<span class="cmd">reg add</span> <span class="s">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="s">""</span> /f
+<span class="cmd">Enable-PSRemoting</span> -Force
+<span class="cmd">net stop</span> <span class="s">"Remote Desktop Services"</span>
+<span class="cmd">net start</span> <span class="s">"Remote Desktop Services"</span></div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-header">
+      <div class="num r">C</div>
+      <div class="step-title">NUCLEAR — Remove Bad Patch (coordinate with SAP team first)</div>
+      <div class="where server">Inside Server via Bastion or PSSession</div>
+    </div>
+    <div class="step-body">
+      <div class="alert red">Last resort. Tell SAP team before rebooting.</div>
+      <div class="code-block" id="em3"><button class="copy-btn" onclick="cp('em3',this)">COPY</button><span class="cmd">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 5
+<span class="cmd">wusa.exe</span> /uninstall /kb:5074109 /quiet /norestart
+<span class="cmd">Restart-Computer</span> -Force</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id,tabId,color){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.className='tab');
+  document.getElementById(id).classList.add('active');
+  var tab=document.getElementById(tabId);
+  tab.className='tab active'+(color?' '+color:'');
+}
+function cp(id,btn){
+  var el=document.getElementById(id);
+  var text=el.innerText.replace(/^COPY\n?/,'').trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var orig=btn.textContent;
+    btn.textContent='COPIED!';
+    btn.classList.add('ok');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('ok');},2000);
+  });
+}
+</script>
+</body>
+</html>
