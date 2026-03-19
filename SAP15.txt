@@ -1,0 +1,3 @@
+'wusa.exe E:\temp\KB5078752\kb5078752.msu /quiet /norestart' | Out-File "\\10.168.0.32\e$\temp\KB5078752\install.bat" -Encoding ASCII
+
+cmd /c E:\temp\KB5078752\install.bat
