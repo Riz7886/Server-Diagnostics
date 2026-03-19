@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SAP PATCH AUTO INSTALL — 10.168.0.32</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&display=swap');
+:root{--bg:#07090f;--panel:#0d1220;--panel2:#0a0f1a;--border:#1a2540;--green:#00ff88;--yellow:#ffd600;--red:#ff4455;--blue:#4fc3f7;--orange:#ff9800;--white:#e8f0fe;--dim:#4a6080;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Barlow',sans-serif;padding:20px;font-size:14px;}
+.topbar{background:linear-gradient(135deg,#0a1628,#0d2040);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:16px 20px;margin-bottom:20px;}
+.topbar h1{font-size:1.3em;font-weight:900;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.topbar p{color:var(--dim);font-size:0.75em;margin-top:4px;font-family:'Share Tech Mono';}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;}
+.card-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);flex-wrap:wrap;}
+.num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.85em;flex-shrink:0;}
+.ng{background:var(--green);color:#000;}.nr{background:var(--red);color:#fff;}.ny{background:var(--yellow);color:#000;}.nb{background:var(--blue);color:#000;}.no{background:var(--orange);color:#000;}
+.ctitle{font-weight:700;font-size:1em;flex:1;}
+.tag{font-size:0.68em;font-family:'Share Tech Mono';padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.taz{background:rgba(79,195,247,0.12);color:var(--blue);border:1px solid rgba(79,195,247,0.3);}
+.tjp{background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.3);}
+.body{padding:16px 18px;}
+.al{font-size:0.82em;padding:9px 13px;border-radius:5px;margin-bottom:12px;border-left:3px solid;line-height:1.5;}
+.al.y{color:var(--yellow);background:rgba(255,214,0,0.06);border-color:var(--yellow);}
+.al.g{color:var(--green);background:rgba(0,255,136,0.06);border-color:var(--green);}
+.al.r{color:var(--red);background:rgba(255,68,85,0.06);border-color:var(--red);}
+.al.b{color:var(--blue);background:rgba(79,195,247,0.06);border-color:var(--blue);}
+.al.o{color:var(--orange);background:rgba(255,152,0,0.06);border-color:var(--orange);}
+.cb{background:#04060d;border:1px solid var(--border);border-radius:6px;padding:14px 16px 14px 16px;font-family:'Share Tech Mono',monospace;font-size:0.79em;line-height:1.8;position:relative;margin-bottom:10px;white-space:pre;overflow-x:auto;}
+.cm{color:var(--dim);}.cc{color:var(--green);}.cp{color:var(--blue);}.cs{color:var(--yellow);}.cv{color:#c084fc;}
+.btn{position:absolute;top:8px;right:8px;background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.4);color:var(--green);font-family:'Barlow',sans-serif;font-size:0.72em;font-weight:700;padding:4px 14px;border-radius:4px;cursor:pointer;transition:all 0.15s;letter-spacing:1px;}
+.btn:hover{background:rgba(0,255,136,0.25);}.btn.ok{background:rgba(0,255,136,0.35);color:#fff;}
+.sl{font-size:0.85em;font-weight:700;margin:12px 0 6px;color:var(--yellow);}
+.sl.g{color:var(--green);}.sl.r{color:var(--red);}.sl.b{color:var(--blue);}
+hr{border:none;border-top:1px solid var(--border);margin:12px 0;}
+.cr{display:flex;gap:8px;align-items:center;font-size:0.82em;margin-bottom:5px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dg{background:var(--green);box-shadow:0 0 4px var(--green);}.dr{background:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🔧 SAP PATCH AUTO-INSTALL — 10.168.0.32</h1>
+  <p>E Drive: \\10.168.0.32\e$\patches-2026\ | User: CRE\c5406751 | RCA-2026-001 | Syed Rizvi</p>
+</div>
+
+<!-- STEP 1 -->
+<div class="card">
+  <div class="card-head">
+    <div class="num ng">1</div>
+    <div class="ctitle">CHECK SERVER VERSION — Run This First In Jumphost PowerShell</div>
+    <div class="tag tjp">💻 Jumphost PowerShell</div>
+  </div>
+  <div class="body">
+    <div class="al b">This tells you if it's Server 2019 or 2022 — determines which KB to download.</div>
+    <div class="cb" id="s1"><button class="btn" onclick="cp('s1',this)">COPY</button"><span class="cc">reg query</span> <span class="cs">"\\10.168.0.32\HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion"</span> /v ProductName</div>
+    <hr>
+    <div class="cr"><div class="dot dg"></div><span style="font-family:'Share Tech Mono';color:var(--green)">Windows Server 2019</span><span style="color:var(--dim)"> → download KB5078938 (Step 2A)</span></div>
+    <div class="cr"><div class="dot dg"></div><span style="font-family:'Share Tech Mono';color:var(--green)">Windows Server 2022</span><span style="color:var(--dim)"> → download KB5078766 (Step 2B)</span></div>
+    <div class="cr"><div class="dot dg"></div><span style="font-family:'Share Tech Mono';color:var(--green)">Windows Server 2025</span><span style="color:var(--dim)"> → download KB5078740 (Step 2C)</span></div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="card">
+  <div class="card-head">
+    <div class="num ny">2</div>
+    <div class="ctitle">DOWNLOAD PATCH TO JUMPHOST C:\temp\ — Click Your Version</div>
+    <div class="tag tjp">💻 Jumphost PowerShell</div>
+  </div>
+  <div class="body">
+    <div class="al o">⚡ Run the matching command below. It downloads directly to C:\temp\ on your jumphost. Wait for it to finish — may take 2-5 min.</div>
+
+    <div class="sl">🔵 Server 2019 — Download KB5078938:</div>
+    <div class="cb" id="dl19"><button class="btn" onclick="cp('dl19',this)">COPY</button"><span class="cm"># Download KB5078938 for Server 2019 to jumphost C:\temp\</span>
+<span class="cc">New-Item</span> <span class="cp">-ItemType</span> Directory <span class="cp">-Path</span> <span class="cs">"C:\temp"</span> <span class="cp">-Force</span> | Out-Null
+<span class="cc">$url</span> = <span class="cs">"https://catalog.update.microsoft.com/Search.aspx?q=KB5078938"</span>
+Write-Host <span class="cs">"Opening catalog - manually download KB5078938 x64 and save to C:\temp\KB5078938.msu"</span>
+Start-Process <span class="cs">"https://catalog.update.microsoft.com/Search.aspx?q=KB5078938"</span></div>
+
+    <div class="sl">🟢 Server 2022 — Download KB5078766:</div>
+    <div class="cb" id="dl22"><button class="btn" onclick="cp('dl22',this)">COPY</button"><span class="cm"># Download KB5078766 for Server 2022 to jumphost C:\temp\</span>
+<span class="cc">New-Item</span> <span class="cp">-ItemType</span> Directory <span class="cp">-Path</span> <span class="cs">"C:\temp"</span> <span class="cp">-Force</span> | Out-Null
+Write-Host <span class="cs">"Opening catalog - manually download KB5078766 x64 and save to C:\temp\KB5078766.msu"</span>
+Start-Process <span class="cs">"https://catalog.update.microsoft.com/Search.aspx?q=KB5078766"</span></div>
+
+    <div class="sl">🟡 Server 2025 — Download KB5078740:</div>
+    <div class="cb" id="dl25"><button class="btn" onclick="cp('dl25',this)">COPY</button"><span class="cm"># Download KB5078740 for Server 2025 to jumphost C:\temp\</span>
+<span class="cc">New-Item</span> <span class="cp">-ItemType</span> Directory <span class="cp">-Path</span> <span class="cs">"C:\temp"</span> <span class="cp">-Force</span> | Out-Null
+Write-Host <span class="cs">"Opening catalog - manually download KB5078740 x64 and save to C:\temp\KB5078740.msu"</span>
+Start-Process <span class="cs">"https://catalog.update.microsoft.com/Search.aspx?q=KB5078740"</span></div>
+
+    <div class="al y">⚠️ On the catalog page: find the row with x64, click Download button, save the .msu file to C:\temp\ on jumphost</div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="card">
+  <div class="card-head">
+    <div class="num nb">3</div>
+    <div class="ctitle">COPY PATCH TO SERVER E DRIVE — Run In Jumphost PowerShell</div>
+    <div class="tag tjp">💻 Jumphost PowerShell</div>
+  </div>
+  <div class="body">
+    <div class="al g">✅ E drive confirmed accessible. patches-2026 folder exists at \\10.168.0.32\e$\patches-2026\</div>
+
+    <div class="sl">Server 2019 — copy KB5078938:</div>
+    <div class="cb" id="cp19"><button class="btn" onclick="cp('cp19',this)">COPY</button"><span class="cc">Copy-Item</span> <span class="cp">-Path</span> <span class="cs">"C:\temp\KB5078938.msu"</span> <span class="cp">-Destination</span> <span class="cs">"\\10.168.0.32\e$\patches-2026\KB5078938.msu"</span> <span class="cp">-Force</span>
+Write-Host <span class="cs">"Done. Verifying..."</span>
+dir <span class="cs">"\\10.168.0.32\e$\patches-2026\"</span></div>
+
+    <div class="sl">Server 2022 — copy KB5078766:</div>
+    <div class="cb" id="cp22"><button class="btn" onclick="cp('cp22',this)">COPY</button"><span class="cc">Copy-Item</span> <span class="cp">-Path</span> <span class="cs">"C:\temp\KB5078766.msu"</span> <span class="cp">-Destination</span> <span class="cs">"\\10.168.0.32\e$\patches-2026\KB5078766.msu"</span> <span class="cp">-Force</span>
+Write-Host <span class="cs">"Done. Verifying..."</span>
+dir <span class="cs">"\\10.168.0.32\e$\patches-2026\"</span></div>
+
+    <div class="sl">Server 2025 — copy KB5078740:</div>
+    <div class="cb" id="cp25"><button class="btn" onclick="cp('cp25',this)">COPY</button"><span class="cc">Copy-Item</span> <span class="cp">-Path</span> <span class="cs">"C:\temp\KB5078740.msu"</span> <span class="cp">-Destination</span> <span class="cs">"\\10.168.0.32\e$\patches-2026\KB5078740.msu"</span> <span class="cp">-Force</span>
+Write-Host <span class="cs">"Done. Verifying..."</span>
+dir <span class="cs">"\\10.168.0.32\e$\patches-2026\"</span></div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="card">
+  <div class="card-head">
+    <div class="num no">4</div>
+    <div class="ctitle">INSTALL PATCH ON SERVER — Paste In Azure Run Command</div>
+    <div class="tag taz">☁️ Azure Portal → VM → Run Command → RunPowerShellScript</div>
+  </div>
+  <div class="body">
+    <div class="al o">⚡ Go to Azure Portal → Find VM c006app01otpd3ab462fa6fb707d → Operations → Run command → RunPowerShellScript → paste → Run. Black screen 1-3 min = normal.</div>
+
+    <div class="sl">Server 2019 — install KB5078938:</div>
+    <div class="cb" id="in19"><button class="btn" onclick="cp('in19',this)">COPY</button"><span class="cm"># Install KB5078938 from E drive</span>
+Write-Host <span class="cs">"Starting patch install..."</span>
+$<span class="cv">p</span> = Start-Process <span class="cp">-FilePath</span> <span class="cs">"wusa.exe"</span> <span class="cp">-ArgumentList</span> <span class="cs">"E:\patches-2026\KB5078938.msu /quiet /norestart"</span> <span class="cp">-Wait</span> <span class="cp">-PassThru</span>
+Write-Host <span class="cs">"Exit code: $($p.ExitCode)"</span>
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 0)       { Write-Host <span class="cs">"SUCCESS - No reboot needed"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 3010)    { Write-Host <span class="cs">"SUCCESS - REBOOT REQUIRED - tell SAP team"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 2359302) { Write-Host <span class="cs">"ALREADY INSTALLED"</span> }
+<span class="cc">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 3</div>
+
+    <div class="sl">Server 2022 — install KB5078766:</div>
+    <div class="cb" id="in22"><button class="btn" onclick="cp('in22',this)">COPY</button"><span class="cm"># Install KB5078766 from E drive</span>
+Write-Host <span class="cs">"Starting patch install..."</span>
+$<span class="cv">p</span> = Start-Process <span class="cp">-FilePath</span> <span class="cs">"wusa.exe"</span> <span class="cp">-ArgumentList</span> <span class="cs">"E:\patches-2026\KB5078766.msu /quiet /norestart"</span> <span class="cp">-Wait</span> <span class="cp">-PassThru</span>
+Write-Host <span class="cs">"Exit code: $($p.ExitCode)"</span>
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 0)       { Write-Host <span class="cs">"SUCCESS - No reboot needed"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 3010)    { Write-Host <span class="cs">"SUCCESS - REBOOT REQUIRED - tell SAP team"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 2359302) { Write-Host <span class="cs">"ALREADY INSTALLED"</span> }
+<span class="cc">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 3</div>
+
+    <div class="sl">Server 2025 — install KB5078740:</div>
+    <div class="cb" id="in25"><button class="btn" onclick="cp('in25',this)">COPY</button"><span class="cm"># Install KB5078740 from E drive</span>
+Write-Host <span class="cs">"Starting patch install..."</span>
+$<span class="cv">p</span> = Start-Process <span class="cp">-FilePath</span> <span class="cs">"wusa.exe"</span> <span class="cp">-ArgumentList</span> <span class="cs">"E:\patches-2026\KB5078740.msu /quiet /norestart"</span> <span class="cp">-Wait</span> <span class="cp">-PassThru</span>
+Write-Host <span class="cs">"Exit code: $($p.ExitCode)"</span>
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 0)       { Write-Host <span class="cs">"SUCCESS - No reboot needed"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 3010)    { Write-Host <span class="cs">"SUCCESS - REBOOT REQUIRED - tell SAP team"</span> }
+if ($<span class="cv">p</span>.ExitCode <span class="cp">-eq</span> 2359302) { Write-Host <span class="cs">"ALREADY INSTALLED"</span> }
+<span class="cc">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 3</div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="card">
+  <div class="card-head">
+    <div class="num ng">5</div>
+    <div class="ctitle">VERIFY + FIX RDP — Paste In Azure Run Command After Patch Installs</div>
+    <div class="tag taz">☁️ Azure Run Command</div>
+  </div>
+  <div class="body">
+    <div class="al g">✅ Run this after patch installs. Fixes RDP InitialProgram error AND verifies everything.</div>
+    <div class="cb" id="verify"><button class="btn" onclick="cp('verify',this)">COPY</button"><span class="cm"># Fix RDP InitialProgram error</span>
+<span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="cs">""</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="cs">"explorer.exe"</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="cs">"C:\Windows\system32\userinit.exe,"</span> /f
+<span class="cc">net stop</span> <span class="cs">"Remote Desktop Services"</span>
+<span class="cc">net start</span> <span class="cs">"Remote Desktop Services"</span>
+<span class="cm"># Verify all good</span>
+<span class="cc">Get-Service</span> TermService | Select Name,Status
+<span class="cc">Get-ItemProperty</span> <span class="cs">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> | Select Shell,Userinit
+<span class="cc">Get-HotFix</span> | Sort-Object InstalledOn -Descending | Select-Object -First 3
+Write-Host <span class="cs">"ALL DONE - Try RDP now: mstsc /v:10.168.0.32"</span></div>
+  </div>
+</div>
+
+<!-- REBOOT -->
+<div class="card">
+  <div class="card-head">
+    <div class="num nr">6</div>
+    <div class="ctitle">REBOOT IF EXIT CODE WAS 3010 — Coordinate With SAP Team First!</div>
+    <div class="tag taz">☁️ Azure Run Command</div>
+  </div>
+  <div class="body">
+    <div class="al r">🚨 Only run if Step 4 showed "REBOOT REQUIRED". TELL SAP TEAM BEFORE RUNNING THIS.</div>
+    <div class="cb" id="reboot"><button class="btn" onclick="cp('reboot',this)">COPY</button">Restart-Computer -Force</div>
+  </div>
+</div>
+
+<script>
+function cp(id,btn){
+  var el=document.getElementById(id);
+  var text=el.innerText.replace(/^COPY\n?/,'').trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var orig=btn.textContent;
+    btn.textContent='✓ COPIED';
+    btn.classList.add('ok');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('ok');},2000);
+  });
+}
+</script>
+</body>
+</html>
