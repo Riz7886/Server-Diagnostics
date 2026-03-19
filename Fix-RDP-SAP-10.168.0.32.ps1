@@ -599,7 +599,6 @@ function Show-Summary {
 # MAIN EXECUTION
 # ================================================================
 try {
-    Clear-Host
     Write-Host ''
     Write-Step "RDP FIX - SAP ENVIRONMENT - 10.168.0.32 - MODE: $Mode - Prepared by: Syed Rizvi"
     Write-Log "Log file : $script:LogFile" -Level 'DATA'
@@ -669,3 +668,37 @@ try {
     Show-Summary
     exit 1
 }
+
+# ================================================================
+# QUICK CONNECTION GUIDE - READ BEFORE RUNNING
+# ================================================================
+#
+# FROM YOUR JUMP SERVER (PowerShell):
+#   1. Open PowerShell as Administrator on the jump server
+#   2. Make sure jump server can reach 10.168.0.32 on port 5985
+#      Test: Test-NetConnection -ComputerName 10.168.0.32 -Port 5985
+#   3. Run: .\Fix-RDP-SAP-10.168.0.32.ps1 -Mode Audit
+#
+# FROM AZURE PORTAL (Cloud Shell):
+#   1. Open portal.azure.com
+#   2. Click the Cloud Shell icon (top right)
+#   3. Choose PowerShell (not Bash)
+#   4. Upload this script using the Upload button
+#   5. Run: .\Fix-RDP-SAP-10.168.0.32.ps1 -Mode Audit
+#   NOTE: Cloud Shell must be on same VNet or have line of sight to 10.168.0.32
+#
+# FROM AZURE BASTION (if VM has Bastion configured):
+#   1. In Azure Portal find the VM for 10.168.0.32
+#   2. Click Connect, select Bastion
+#   3. Login with admin credentials
+#   4. Now you are ON the server - run commands LOCALLY:
+#      Get-HotFix | Sort InstalledOn -Desc | Select -First 10
+#      wusa.exe C:\Patch\KB5078766.msu /quiet /norestart
+#
+# IF WINRM IS NOT ENABLED ON 10.168.0.32:
+#   Use Bastion or iLO/console to run this ONE TIME on the server:
+#   Enable-PSRemoting -Force
+#   netsh advfirewall firewall add rule name="WinRM" protocol=TCP dir=in localport=5985 action=allow
+#   Then run the script from your jump server normally.
+#
+# ================================================================
