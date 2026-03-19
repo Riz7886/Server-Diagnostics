@@ -1,0 +1,6 @@
+# Step 1 - Add to trusted hosts
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "10.168.0.32" -Force
+
+# Step 2 - Run the Fix directly!
+cd C:\temp
+.\Fix-RDP-SAP-10.168.0.32.ps1 -Mode Fix -Credential (Get-Credential)
