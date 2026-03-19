@@ -1,0 +1,15 @@
+# Fix broken Winlogon registry
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Shell /t REG_SZ /d "explorer.exe" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Userinit /t REG_SZ /d "C:\Windows\system32\userinit.exe," /f
+
+# Enable WinRM so script can connect
+Enable-PSRemoting -Force
+netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+
+# Restart RDP service — no reboot needed
+net stop "Remote Desktop Services"
+net start "Remote Desktop Services"
+
+# Confirm everything is running
+Get-Service WinRM | Select Name, Status
+Get-Service TermService | Select Name, Status
