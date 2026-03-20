@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KB5078752 FINAL INSTALL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@700;900&display=swap');
+:root{--bg:#07090f;--panel:#0d1220;--border:#1a2540;--green:#00ff88;--yellow:#ffd600;--red:#ff4455;--blue:#4fc3f7;--white:#e8f0fe;--dim:#4a6080;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Barlow',sans-serif;padding:24px;font-size:15px;}
+.topbar{background:linear-gradient(135deg,#0a1628,#0d2040);border:1px solid var(--border);border-left:5px solid var(--green);border-radius:8px;padding:18px 22px;margin-bottom:24px;}
+.topbar h1{font-size:1.4em;font-weight:900;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.topbar p{color:var(--dim);font-size:0.78em;margin-top:5px;font-family:'Share Tech Mono';}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+.card-head{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);}
+.num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1em;flex-shrink:0;}
+.ng{background:#00ff88;color:#000;}.nr{background:#ff4455;color:#fff;}.ny{background:#ffd600;color:#000;}.nb{background:#4fc3f7;color:#000;}
+.ctitle{font-weight:900;font-size:1.1em;flex:1;}
+.tag{font-size:0.7em;font-family:'Share Tech Mono';padding:3px 12px;border-radius:20px;white-space:nowrap;}
+.tjp{background:rgba(0,255,136,0.1);color:#00ff88;border:1px solid rgba(0,255,136,0.3);}
+.tsv{background:rgba(255,68,85,0.12);color:#ff4455;border:1px solid rgba(255,68,85,0.3);}
+.taz{background:rgba(79,195,247,0.12);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);}
+.body{padding:18px 20px;}
+.al{font-size:0.85em;padding:10px 14px;border-radius:5px;margin-bottom:14px;border-left:3px solid;line-height:1.6;}
+.al.y{color:#ffd600;background:rgba(255,214,0,0.06);border-color:#ffd600;}
+.al.g{color:#00ff88;background:rgba(0,255,136,0.06);border-color:#00ff88;}
+.al.r{color:#ff4455;background:rgba(255,68,85,0.06);border-color:#ff4455;}
+.al.b{color:#4fc3f7;background:rgba(79,195,247,0.06);border-color:#4fc3f7;}
+.cb{background:#04060d;border:1px solid var(--border);border-radius:6px;padding:16px 18px;font-family:'Share Tech Mono',monospace;font-size:0.88em;line-height:1.9;position:relative;margin-bottom:12px;white-space:pre;overflow-x:auto;}
+.cm{color:#4a6080;}.cc{color:#00ff88;}.cv{color:#c084fc;}.cs{color:#ffd600;}.cp{color:#4fc3f7;}
+.btn{position:absolute;top:10px;right:10px;background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.4);color:#00ff88;font-family:'Barlow',sans-serif;font-size:0.78em;font-weight:700;padding:5px 16px;border-radius:4px;cursor:pointer;transition:all 0.15s;letter-spacing:1px;}
+.btn:hover{background:rgba(0,255,136,0.25);}.btn.ok{background:rgba(0,255,136,0.35);color:#fff;}
+.cr{display:flex;gap:10px;align-items:center;font-size:0.9em;margin-bottom:7px;}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dg{background:#00ff88;box-shadow:0 0 5px #00ff88;}.dr{background:#ff4455;}.dy{background:#ffd600;}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>💻 KB5078752 FINAL INSTALL — 10.168.0.32</h1>
+  <p>Server 2019 Datacenter | Patch: E:\temp\KB5078752\kb5078752.msu | User: CRE\c5406751 | RCA-2026-001</p>
+</div>
+
+<div class="card">
+  <div class="card-head"><div class="num ng">1</div><div class="ctitle">OPEN REMOTE SESSION — Popup will ask for password</div><div class="tag tjp">💻 Jumphost PowerShell</div></div>
+  <div class="body">
+    <div class="al y">⚡ Paste this — a popup appears — type CRE\c5406751 and your password — click OK</div>
+    <div class="cb" id="s1"><button class="btn" onclick="cp('s1',this)">COPY</button>$<span class="cv">cred</span> = Get-Credential
+Enter-PSSession -ComputerName 10.168.0.32 -Credential $<span class="cv">cred</span> -Authentication Negotiate</div>
+    <div class="al g">✅ When you see [10.168.0.32]: in prompt — you are INSIDE the server. Go to Step 2.</div>
+    <hr>
+    <div class="al b">If Negotiate fails — try Kerberos:</div>
+    <div class="cb" id="s1b"><button class="btn" onclick="cp('s1b',this)">COPY</button">$<span class="cv">cred</span> = Get-Credential
+Enter-PSSession -ComputerName 10.168.0.32 -Credential $<span class="cv">cred</span> -Authentication Kerberos</div>
+    <div class="al b">If still fails — set TrustedHosts first then retry Step 1:</div>
+    <div class="cb" id="s1c"><button class="btn" onclick="cp('s1c',this)">COPY</button">Set-Item WSMan:\localhost\Client\TrustedHosts -Value <span class="cs">"10.168.0.32"</span> -Force</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><div class="num ny">2</div><div class="ctitle">INSTALL PATCH — Run INSIDE [10.168.0.32]: prompt</div><div class="tag tsv">🖥️ Inside Server Session</div></div>
+  <div class="body">
+    <div class="al r">🚨 ONLY run after you see [10.168.0.32]: — means you are inside the server</div>
+    <div class="cb" id="s2"><button class="btn" onclick="cp('s2',this)">COPY</button"><span class="cm"># This runs ON THE SERVER — group policy will NOT block it</span>
+wusa.exe E:\temp\KB5078752\kb5078752.msu /quiet /norestart
+Write-Host <span class="cs">"Patch installing — wait 5 minutes"</span></div>
+    <div class="al y">⏳ Wait 5 minutes. Do not close PowerShell. Prompt returns when done.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><div class="num ny">3</div><div class="ctitle">FIX RDP + VERIFY — Run INSIDE [10.168.0.32]: prompt</div><div class="tag tsv">🖥️ Inside Server Session</div></div>
+  <div class="body">
+    <div class="al g">✅ Run after wusa.exe finishes. Fixes RDP and confirms patch installed.</div>
+    <div class="cb" id="s3"><button class="btn" onclick="cp('s3',this)">COPY</button"><span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="cs">""</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="cs">"explorer.exe"</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="cs">"C:\Windows\system32\userinit.exe,"</span> /f
+net stop <span class="cs">"Remote Desktop Services"</span>
+net start <span class="cs">"Remote Desktop Services"</span>
+Get-HotFix -Id KB5078752
+Get-Service TermService | Select Name,Status
+Write-Host <span class="cs">"ALL DONE - Exit and try RDP"</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><div class="num nb">4</div><div class="ctitle">EXIT + TRY RDP</div><div class="tag tjp">💻 Jumphost PowerShell</div></div>
+  <div class="body">
+    <div class="cb" id="s4a"><button class="btn" onclick="cp('s4a',this)">COPY</button">Exit-PSSession</div>
+    <div class="cb" id="s4b"><button class="btn" onclick="cp('s4b',this)">COPY</button">mstsc /v:10.168.0.32</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><div class="num nr">5</div><div class="ctitle">REBOOT — ONLY If Step 3 says reboot required. Tell SAP team first!</div><div class="tag tsv">🖥️ Inside Server OR Azure Run Command</div></div>
+  <div class="body">
+    <div class="al r">🚨 TELL SAP TEAM BEFORE RUNNING. Server goes down 2-3 min.</div>
+    <div class="cb" id="s5"><button class="btn" onclick="cp('s5',this)">COPY</button">Restart-Computer -Force</div>
+  </div>
+</div>
+
+<script>
+function cp(id,btn){
+  var el=document.getElementById(id);
+  var text=el.innerText.replace(/^COPY\n?/,'').trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var orig=btn.textContent;
+    btn.textContent='COPIED!';
+    btn.classList.add('ok');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('ok');},2000);
+  });
+}
+</script>
+</body>
+</html>
