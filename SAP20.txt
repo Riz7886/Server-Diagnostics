@@ -1,0 +1,55 @@
+Hi Team,
+
+I am off tomorrow and need Robert Sexton to take over and complete the patch installation on SAP server 10.168.0.32 under INC0124705 and CHG0127296.
+
+SUMMARY OF WHAT WAS DONE:
+
+The February 2026 Windows patch (KB5074109) broke RDP login on server 10.168.0.32. All SAP users are getting the error: "An error occurred while an initial user program was starting" and cannot log in.
+
+We spent all of March 19 troubleshooting. Here is what was accomplished:
+
+• Identified root cause: KB5074109 corrupted Winlogon registry and RDP-Tcp InitialProgram settings
+• Fixed the registry entries (Shell, Userinit, InitialProgram) via PSSession
+• Downloaded the correct fix patch KB5078752 (March 2026 Cumulative Update for Server 2019)
+• Copied the patch to the server at: E:\temp\KB5078752\kb5078752.msu
+• Initiated patch installation via PSSession — ran for 25+ minutes
+• Server was rebooted under CHG0127296
+
+WHAT ROBERT NEEDS TO DO TOMORROW MORNING:
+
+Step 1 — Connect to server via PSSession:
+   Enter-PSSession -ComputerName 10.168.0.32 -Credential (Get-Credential) -Authentication Negotiate
+   Username: CRE\c5406751 (or your own admin account)
+
+Step 2 — Check if patch already installed:
+   Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 5
+   (Look for KB5078752 in the list)
+
+Step 3A — If KB5078752 NOT in list, install it:
+   wusa.exe E:\temp\KB5078752\kb5078752.msu /quiet /norestart
+   (Wait 5-10 minutes)
+
+Step 3B — If exit code is 3010 (reboot required):
+   Coordinate reboot with SAP team under CHG0127296
+   Restart-Computer -Force
+
+Step 4 — After reboot, verify and fix RDP:
+   reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v InitialProgram /t REG_SZ /d "" /f
+   reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+   net stop "Remote Desktop Services"
+   net start "Remote Desktop Services"
+
+Step 5 — Test RDP:
+   mstsc /v:10.168.0.32
+
+The full RCA document (RCA-2026-001) is attached with all technical details, every step taken, and complete resolution plan.
+
+KEY FILES ON SERVER (already there, no need to re-upload):
+   E:\temp\KB5078752\kb5078752.msu  (818MB — March 2026 patch)
+   E:\temp\KB5078752\install.bat    (install script)
+
+Please reach out if you have any questions.
+
+Thank you,
+Syed Rizvi
+SAP CRE Environment Team
