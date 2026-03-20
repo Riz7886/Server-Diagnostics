@@ -1,0 +1,12 @@
+$cred = Get-Credential
+Invoke-Command -ComputerName "c006app01otpd3ab462fa6fb707d.directory.cre.sapns2.internal" -Credential $cred -ScriptBlock {
+    wusa.exe E:\temp\KB5078752\kb5078752.msu /quiet /norestart
+    reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v InitialProgram /t REG_SZ /d "" /f
+    reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+    reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Shell /t REG_SZ /d "explorer.exe" /f
+    reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Userinit /t REG_SZ /d "C:\Windows\system32\userinit.exe," /f
+    net stop "Remote Desktop Services"
+    net start "Remote Desktop Services"
+    Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 3
+    Write-Host "ALL DONE"
+}
