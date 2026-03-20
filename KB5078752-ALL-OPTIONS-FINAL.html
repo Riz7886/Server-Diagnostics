@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KB5078752 ALL OPTIONS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@700;900&display=swap');
+:root{--bg:#07090f;--panel:#0d1220;--border:#1a2540;--green:#00ff88;--yellow:#ffd600;--red:#ff4455;--blue:#4fc3f7;--white:#e8f0fe;--dim:#4a6080;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Barlow',sans-serif;padding:24px;font-size:15px;}
+.topbar{background:linear-gradient(135deg,#0a1628,#0d2040);border:1px solid var(--border);border-left:5px solid var(--green);border-radius:8px;padding:18px 22px;margin-bottom:24px;}
+.topbar h1{font-size:1.4em;font-weight:900;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.topbar p{color:var(--dim);font-size:0.78em;margin-top:5px;font-family:'Share Tech Mono';}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+.card-head{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);}
+.num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1em;flex-shrink:0;}
+.ng{background:#00ff88;color:#000;}.nr{background:#ff4455;color:#fff;}.ny{background:#ffd600;color:#000;}.nb{background:#4fc3f7;color:#000;}
+.ctitle{font-weight:900;font-size:1.05em;flex:1;}
+.tag{font-size:0.7em;font-family:'Share Tech Mono';padding:3px 12px;border-radius:20px;white-space:nowrap;}
+.tjp{background:rgba(0,255,136,0.1);color:#00ff88;border:1px solid rgba(0,255,136,0.3);}
+.tsv{background:rgba(255,68,85,0.12);color:#ff4455;border:1px solid rgba(255,68,85,0.3);}
+.taz{background:rgba(79,195,247,0.12);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);}
+.body{padding:18px 20px;}
+.al{font-size:0.85em;padding:10px 14px;border-radius:5px;margin-bottom:14px;border-left:3px solid;line-height:1.6;}
+.al.y{color:#ffd600;background:rgba(255,214,0,0.06);border-color:#ffd600;}
+.al.g{color:#00ff88;background:rgba(0,255,136,0.06);border-color:#00ff88;}
+.al.r{color:#ff4455;background:rgba(255,68,85,0.06);border-color:#ff4455;}
+.al.b{color:#4fc3f7;background:rgba(79,195,247,0.06);border-color:#4fc3f7;}
+.cb{background:#04060d;border:1px solid var(--border);border-radius:6px;padding:16px 18px;font-family:'Share Tech Mono',monospace;font-size:0.85em;line-height:1.9;position:relative;margin-bottom:12px;white-space:pre;overflow-x:auto;}
+.cm{color:#4a6080;}.cc{color:#00ff88;}.cv{color:#c084fc;}.cs{color:#ffd600;}.cp{color:#4fc3f7;}
+.btn{position:absolute;top:10px;right:10px;background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.4);color:#00ff88;font-family:'Barlow',sans-serif;font-size:0.78em;font-weight:700;padding:5px 16px;border-radius:4px;cursor:pointer;transition:all 0.15s;letter-spacing:1px;}
+.btn:hover{background:rgba(0,255,136,0.25);}.btn.ok{background:rgba(0,255,136,0.35);color:#fff;}
+.sl{font-size:0.9em;font-weight:700;color:#ffd600;margin:12px 0 6px;}
+.sl.g{color:#00ff88;}.sl.b{color:#4fc3f7;}.sl.r{color:#ff4455;}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🔧 KB5078752 — ALL INSTALL OPTIONS</h1>
+  <p>Server: 10.168.0.32 | Patch ON SERVER: E:\temp\KB5078752\kb5078752.msu | BAT FILE ON SERVER: E:\temp\KB5078752\install.bat</p>
+</div>
+
+<!-- OPTION 1 - SCHEDULED TASK -->
+<div class="card">
+  <div class="card-head"><div class="num ng">1</div><div class="ctitle">SCHEDULED TASK — No WinRM, No PSSession needed. Best option.</div><div class="tag tjp">💻 Jumphost THEN ☁️ Azure Run Command</div></div>
+  <div class="body">
+    <div class="al g">✅ Bat file already on server. This creates a scheduled task to run it. 2 steps.</div>
+    <div class="sl">Step A — Jumphost PowerShell — drop task XML:</div>
+    <div class="cb" id="o1a"><button class="btn" onclick="cp('o1a',this)">COPY</button>$<span class="cv">xml</span> = <span class="cs">@'
+<?xml version="1.0"?>
+<Task xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Triggers><TimeTrigger><StartBoundary>2026-03-19T00:00:00</StartBoundary><Enabled>true</Enabled></TimeTrigger></Triggers>
+  <Principals><Principal><RunLevel>HighestAvailable</RunLevel></Principal></Principals>
+  <Settings><Enabled>true</Enabled></Settings>
+  <Actions><Exec><Command>cmd</Command><Arguments>/c E:\temp\KB5078752\install.bat > E:\temp\KB5078752\result.txt 2>&1</Arguments></Exec></Actions>
+</Task>
+'@</span>
+$<span class="cv">xml</span> | Out-File <span class="cs">"\\10.168.0.32\e$\temp\KB5078752\task.xml"</span> -Encoding UTF8
+Write-Host <span class="cs">"DONE - Now go to Azure Run Command and paste Step B"</span></div>
+    <div class="sl">Step B — Azure Run Command — ONE LINE:</div>
+    <div class="cb" id="o1b"><button class="btn" onclick="cp('o1b',this)">COPY</button">schtasks /create /tn "InstallPatch" /xml "E:\temp\KB5078752\task.xml" /f && schtasks /run /tn "InstallPatch"</div>
+    <div class="sl g">Step C — Check result 5 min later — Jumphost PowerShell:</div>
+    <div class="cb" id="o1c"><button class="btn" onclick="cp('o1c',this)">COPY</button">type "\\10.168.0.32\e$\temp\KB5078752\result.txt"</div>
+  </div>
+</div>
+
+<!-- OPTION 2 - PSSESSION -->
+<div class="card">
+  <div class="card-head"><div class="num ny">2</div><div class="ctitle">REMOTE PSSESSION — Run wusa.exe directly on server</div><div class="tag tjp">💻 Jumphost PowerShell</div></div>
+  <div class="body">
+    <div class="al y">⚡ Popup asks for credentials. Type CRE\c5406751 and password.</div>
+    <div class="sl">Step A — Open session:</div>
+    <div class="cb" id="o2a"><button class="btn" onclick="cp('o2a',this)">COPY</button">$<span class="cv">cred</span> = Get-Credential
+Enter-PSSession -ComputerName 10.168.0.32 -Credential $<span class="cv">cred</span> -Authentication Negotiate</div>
+    <div class="sl">Step B — Once inside [10.168.0.32]: install patch:</div>
+    <div class="cb" id="o2b"><button class="btn" onclick="cp('o2b',this)">COPY</button">wusa.exe E:\temp\KB5078752\kb5078752.msu /quiet /norestart
+Write-Host <span class="cs">"Wait 5 minutes"</span></div>
+    <div class="sl">Step C — Fix RDP + verify:</div>
+    <div class="cb" id="o2c"><button class="btn" onclick="cp('o2c',this)">COPY</button"><span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="cs">""</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+net stop <span class="cs">"Remote Desktop Services"</span>
+net start <span class="cs">"Remote Desktop Services"</span>
+Get-HotFix -Id KB5078752
+Get-Service TermService | Select Name,Status</div>
+    <div class="sl">Step D — Exit and try RDP:</div>
+    <div class="cb" id="o2d"><button class="btn" onclick="cp('o2d',this)">COPY</button">Exit-PSSession
+mstsc /v:10.168.0.32</div>
+    <hr>
+    <div class="sl b">If Negotiate fails try Kerberos:</div>
+    <div class="cb" id="o2e"><button class="btn" onclick="cp('o2e',this)">COPY</button">$<span class="cv">cred</span> = Get-Credential
+Enter-PSSession -ComputerName 10.168.0.32 -Credential $<span class="cv">cred</span> -Authentication Kerberos</div>
+    <div class="sl b">If still fails set TrustedHosts first:</div>
+    <div class="cb" id="o2f"><button class="btn" onclick="cp('o2f',this)">COPY</button">Set-Item WSMan:\localhost\Client\TrustedHosts -Value <span class="cs">"10.168.0.32"</span> -Force</div>
+  </div>
+</div>
+
+<!-- OPTION 3 - AZURE RUN COMMAND DIRECT -->
+<div class="card">
+  <div class="card-head"><div class="num nb">3</div><div class="ctitle">AZURE RUN COMMAND — Direct install. Wait 5-10 min for black screen.</div><div class="tag taz">☁️ Azure Portal → VM → Run Command</div></div>
+  <div class="body">
+    <div class="al b">Azure Portal → VM c006app01otpd3ab462fa6fb707d → Operations → Run command → RunPowerShellScript → paste → Run</div>
+    <div class="cb" id="o3"><button class="btn" onclick="cp('o3',this)">COPY</button">cmd /c E:\temp\KB5078752\install.bat</div>
+    <hr>
+    <div class="al y">Or install directly:</div>
+    <div class="cb" id="o3b"><button class="btn" onclick="cp('o3b',this)">COPY</button">$<span class="cv">p</span> = Start-Process "wusa.exe" -ArgumentList "E:\temp\KB5078752\kb5078752.msu /quiet /norestart" -Wait -PassThru
+Write-Host "Exit: $($p.ExitCode)"
+if ($<span class="cv">p</span>.ExitCode -eq 0)    { Write-Host <span class="cs">"SUCCESS"</span> }
+if ($<span class="cv">p</span>.ExitCode -eq 3010) { Write-Host <span class="cs">"SUCCESS REBOOT REQUIRED"</span> }</div>
+  </div>
+</div>
+
+<!-- OPTION 4 - VERIFY + FIX RDP -->
+<div class="card">
+  <div class="card-head"><div class="num ng">4</div><div class="ctitle">VERIFY + FIX RDP — Run after patch installs via any method</div><div class="tag taz">☁️ Azure Run Command</div></div>
+  <div class="body">
+    <div class="al g">✅ Run this after patch installs. Fixes RDP and confirms everything.</div>
+    <div class="cb" id="o4"><button class="btn" onclick="cp('o4',this)">COPY</button"><span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="cs">""</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="cs">"explorer.exe"</span> /f
+<span class="cc">reg add</span> <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="cs">"C:\Windows\system32\userinit.exe,"</span> /f
+net stop <span class="cs">"Remote Desktop Services"</span>
+net start <span class="cs">"Remote Desktop Services"</span>
+Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 3
+Write-Host <span class="cs">"DONE - Try RDP: mstsc /v:10.168.0.32"</span></div>
+  </div>
+</div>
+
+<!-- OPTION 5 - REBOOT -->
+<div class="card">
+  <div class="card-head"><div class="num nr">5</div><div class="ctitle">REBOOT — Only if needed. Tell SAP team first!</div><div class="tag taz">☁️ Azure Run Command</div></div>
+  <div class="body">
+    <div class="al r">🚨 TELL SAP TEAM BEFORE RUNNING THIS.</div>
+    <div class="cb" id="o5"><button class="btn" onclick="cp('o5',this)">COPY</button">Restart-Computer -Force</div>
+  </div>
+</div>
+
+<script>
+function cp(id,btn){
+  var el=document.getElementById(id);
+  var text=el.innerText.replace(/^COPY\n?/,'').trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var orig=btn.textContent;
+    btn.textContent='COPIED!';
+    btn.classList.add('ok');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('ok');},2000);
+  });
+}
+</script>
+</body>
+</html>
