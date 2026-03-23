@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SAP RDP Fix — 10.168.0.32 — Complete Command Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&display=swap');
+
+  :root {
+    --bg:       #0a0d12;
+    --panel:    #0f1520;
+    --border:   #1e2d45;
+    --accent:   #00d4ff;
+    --green:    #00ff88;
+    --red:      #ff3c5a;
+    --yellow:   #ffcc00;
+    --orange:   #ff8c00;
+    --text:     #c8d8e8;
+    --dim:      #4a6080;
+    --code-bg:  #060a10;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 0 0 60px 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d1a2e 0%, #0a1520 60%, #0d0f1a 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 32px 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 28px,
+      rgba(0,212,255,.03) 28px, rgba(0,212,255,.03) 29px
+    );
+  }
+  .badge {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  header h1 span { color: var(--accent); }
+  .meta {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 600;
+    color: var(--dim); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .meta-item .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .dot-red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    display: flex;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .pb-step {
+    flex: 1; min-width: 100px;
+    padding: 10px 16px;
+    font-size: 11px; font-weight: 700;
+    text-align: center; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--dim);
+    border-right: 1px solid var(--border);
+    cursor: default; white-space: nowrap;
+  }
+  .pb-step.fix  { color: var(--yellow); border-bottom: 2px solid var(--yellow); }
+  .pb-step.conn { color: var(--accent);  border-bottom: 2px solid var(--accent); }
+  .pb-step.reg  { color: var(--green);   border-bottom: 2px solid var(--green); }
+  .pb-step.svc  { color: var(--orange);  border-bottom: 2px solid var(--orange); }
+  .pb-step.patch{ color: #b088ff;        border-bottom: 2px solid #b088ff; }
+  .pb-step.done { color: var(--green);   border-bottom: 2px solid var(--green); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── ALERT BOX ── */
+  .alert {
+    margin: 28px 0 0;
+    padding: 16px 20px;
+    border-left: 4px solid var(--red);
+    background: rgba(255,60,90,.07);
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .alert strong { color: var(--red); }
+
+  /* ── SECTION ── */
+  .section {
+    margin-top: 36px;
+  }
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .step-num {
+    width: 36px; height: 36px; flex-shrink: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px; font-weight: 700;
+    border: 2px solid;
+  }
+  .num-yellow { color: var(--yellow); border-color: var(--yellow); background: rgba(255,204,0,.08); }
+  .num-blue   { color: var(--accent); border-color: var(--accent); background: rgba(0,212,255,.08); }
+  .num-green  { color: var(--green);  border-color: var(--green);  background: rgba(0,255,136,.08); }
+  .num-orange { color: var(--orange); border-color: var(--orange); background: rgba(255,140,0,.08); }
+  .num-purple { color: #b088ff;       border-color: #b088ff;       background: rgba(176,136,255,.08); }
+  .num-teal   { color: #00e5cc;       border-color: #00e5cc;       background: rgba(0,229,204,.08); }
+
+  .section-title {
+    font-size: 18px; font-weight: 800;
+    color: #fff; letter-spacing: -0.2px;
+  }
+  .section-title small {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--dim); letter-spacing: 1px;
+    text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .card-label {
+    padding: 8px 16px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lbl-yellow { color: var(--yellow); background: rgba(255,204,0,.05); }
+  .lbl-blue   { color: var(--accent); background: rgba(0,212,255,.05); }
+  .lbl-green  { color: var(--green);  background: rgba(0,255,136,.05); }
+  .lbl-orange { color: var(--orange); background: rgba(255,140,0,.05); }
+  .lbl-purple { color: #b088ff;       background: rgba(176,136,255,.05); }
+  .lbl-red    { color: var(--red);    background: rgba(255,60,90,.05); }
+  .lbl-teal   { color: #00e5cc;       background: rgba(0,229,204,.05); }
+
+  .copy-btn {
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    padding: 2px 10px; border-radius: 3px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+  }
+  .copy-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  pre {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 16px 20px;
+    background: var(--code-bg);
+    color: #e0eeff;
+    overflow-x: auto;
+    line-height: 1.8;
+    white-space: pre;
+  }
+  .comment { color: var(--dim); }
+  .kw  { color: var(--accent); }
+  .str { color: var(--green); }
+  .val { color: var(--yellow); }
+  .err { color: var(--red); }
+  .ok  { color: var(--green); }
+  .warn-text { color: var(--yellow); }
+
+  /* ── NOTE BOX ── */
+  .note {
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 10px 0 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .note-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+  .note-yellow { background: rgba(255,204,0,.07); border: 1px solid rgba(255,204,0,.2); color: #e8d060; }
+  .note-red    { background: rgba(255,60,90,.07);  border: 1px solid rgba(255,60,90,.2);  color: #ff8090; }
+  .note-green  { background: rgba(0,255,136,.07);  border: 1px solid rgba(0,255,136,.2);  color: #60e8a0; }
+  .note-blue   { background: rgba(0,212,255,.07);  border: 1px solid rgba(0,212,255,.2);  color: #60c8ff; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: rgba(255,255,255,.04);
+    color: var(--dim); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    font-size: 11px; padding: 10px 14px;
+    border-bottom: 1px solid var(--border); text-align: left;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .td-kb   { color: var(--accent); font-family: 'Share Tech Mono', monospace; }
+  .td-bad  { color: var(--red); font-weight: 700; }
+  .td-good { color: var(--green); font-weight: 700; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 40px 0; position: relative;
+  }
+  .divider::after {
+    content: '◆';
+    position: absolute; left: 50%; top: -8px;
+    transform: translateX(-50%);
+    color: var(--dim); font-size: 10px;
+    background: var(--bg); padding: 0 10px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 50px;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px;
+    font-size: 12px; color: var(--dim);
+  }
+  footer strong { color: var(--accent); }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'Share Tech Mono', monospace;
+    background: rgba(0,212,255,.1);
+    color: var(--accent);
+    padding: 1px 6px; border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width:640px){ .two-col { grid-template-columns: 1fr; } }
+
+  .outcome-box {
+    background: rgba(0,255,136,.05);
+    border: 1px solid rgba(0,255,136,.25);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-top: 14px;
+  }
+  .outcome-box h4 { color: var(--green); font-size: 13px; font-weight: 700; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .outcome-box ul { list-style: none; }
+  .outcome-box li { padding: 4px 0; font-size: 13px; }
+  .outcome-box li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="badge">🔴 Active Incident</div>
+    <h1>SAP Server RDP Fix — <span>10.168.0.32</span></h1>
+    <p style="color:var(--dim); font-size:14px;">Windows Server 2019 Datacenter &nbsp;|&nbsp; VM: c006app01otpd3ab462fa6fb707d &nbsp;|&nbsp; Root Cause: KB5074109 broke Winlogon</p>
+    <div class="meta">
+      <div class="meta-item"><span class="dot dot-red"></span> RDP Broken</div>
+      <div class="meta-item"><span class="dot dot-yellow"></span> WinRM Connection Issues</div>
+      <div class="meta-item"><span class="dot dot-green"></span> Azure Portal Access ✓</div>
+    </div>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+  <div class="pb-step fix">1 · Trust Fix</div>
+  <div class="pb-step conn">2 · Connect</div>
+  <div class="pb-step reg">3 · Winlogon</div>
+  <div class="pb-step svc">4 · Services</div>
+  <div class="pb-step patch">5 · Patch</div>
+  <div class="pb-step done">6 · Verify</div>
+</div>
+
+<div class="container">
+
+  <!-- ALERT -->
+  <div class="alert">
+    <strong>Why PSSession failed:</strong> Your jump server does not trust <code>10.168.0.32</code> yet — WinRM rejected the connection with error <code>0x80090300</code>. Run Step 1 first to fix this before connecting.
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 1 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-yellow">1</div>
+      <div class="section-title">
+        Fix TrustedHosts — Run as Administrator
+        <small>One-time fix on your jump server · Allows WinRM to connect to 10.168.0.32</small>
+      </div>
+    </div>
+
+    <div class="note note-red">
+      <span class="note-icon">⚠️</span>
+      <span><strong>Open PowerShell as Administrator</strong> (right-click → Run as Administrator). These commands WILL fail if run in a normal PowerShell window.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-yellow">
+        Run on YOUR jump server — PowerShell as Administrator
+        <button class="copy-btn" onclick="copyCode(this,'cmd1')">Copy</button>
+      </div>
+      <pre id="cmd1"><span class="comment"># Step 1a — Check current TrustedHosts</span>
+<span class="kw">Get-Item</span> WSMan:\localhost\Client\TrustedHosts
+
+<span class="comment"># Step 1b — Add SAP server to trusted list</span>
+<span class="kw">Set-Item</span> WSMan:\localhost\Client\TrustedHosts -Value <span class="str">"10.168.0.32"</span> -Force
+
+<span class="comment"># Step 1c — Confirm it was added</span>
+<span class="kw">Get-Item</span> WSMan:\localhost\Client\TrustedHosts
+<span class="comment"># Should show: 10.168.0.32</span>
+
+<span class="comment"># Step 1d — Restart WinRM service</span>
+<span class="kw">Restart-Service</span> WinRM -Force
+<span class="ok">Write-Host</span> <span class="str">"WinRM restarted — ready to connect"</span> -ForegroundColor Green</pre>
+    </div>
+
+    <div class="note note-yellow">
+      <span class="note-icon">💡</span>
+      <span>If the server already has entries in TrustedHosts, use <code>-Value "existing,10.168.0.32"</code> to append instead of replacing.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 2 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-blue">2</div>
+      <div class="section-title">
+        Connect — Enter-PSSession
+        <small>Try Method A first. Fall back to Method B or C if it fails.</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-blue">
+        Method A — NTLM Authentication (most common for cross-domain)
+        <button class="copy-btn" onclick="copyCode(this,'cmd2a')">Copy</button>
+      </div>
+      <pre id="cmd2a"><span class="comment"># Get credentials — a dialog will pop up</span>
+<span class="val">$cred</span> = <span class="kw">Get-Credential</span>
+<span class="comment"># Enter: domain\username  or  .\localadmin</span>
+<span class="comment"># Example: cre\c5406751  or  .\Administrator</span>
+
+<span class="comment"># Connect using NTLM</span>
+<span class="kw">Enter-PSSession</span> -ComputerName <span class="str">10.168.0.32</span> `
+                -Credential <span class="val">$cred</span> `
+                -Authentication <span class="str">Negotiate</span>
+
+<span class="comment"># SUCCESS looks like:  [10.168.0.32]: PS C:\Users\...&gt;</span></pre>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-orange">
+        Method B — Skip SSL checks (if certificate errors)
+        <button class="copy-btn" onclick="copyCode(this,'cmd2b')">Copy</button>
+      </div>
+      <pre id="cmd2b"><span class="val">$sessionOpts</span> = <span class="kw">New-PSSessionOption</span> `
+    -SkipCACheck `
+    -SkipCNCheck `
+    -SkipRevocationCheck
+
+<span class="kw">Enter-PSSession</span> -ComputerName <span class="str">10.168.0.32</span> `
+                -Credential <span class="val">$cred</span> `
+                -Authentication <span class="str">Negotiate</span> `
+                -SessionOption <span class="val">$sessionOpts</span></pre>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-red">
+        Method C — Direct NTLM no negotiate (last resort)
+        <button class="copy-btn" onclick="copyCode(this,'cmd2c')">Copy</button>
+      </div>
+      <pre id="cmd2c"><span class="kw">Enter-PSSession</span> -ComputerName <span class="str">10.168.0.32</span> `
+                -Credential <span class="val">$cred</span> `
+                -Authentication <span class="str">NTLM</span> `
+                -Port <span class="val">5985</span></pre>
+    </div>
+
+    <div class="note note-blue">
+      <span class="note-icon">ℹ️</span>
+      <span>Once connected your prompt changes to <code>[10.168.0.32]: PS C:\&gt;</code> — that means you are now INSIDE the SAP server. All commands after this run ON the SAP server.</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 3 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-green">3</div>
+      <div class="section-title">
+        Fix Winlogon Registry — ROOT CAUSE of RDP failure
+        <small>Run these AFTER you are connected inside the PSSession</small>
+      </div>
+    </div>
+
+    <div class="note note-red">
+      <span class="note-icon">🔴</span>
+      <span><strong>This is the actual break.</strong> KB5074109 corrupted the Winlogon Shell and Userinit values. RDP connects but immediately drops because Windows cannot load the user shell. These 3 commands fix it.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-green">
+        Winlogon Registry Fix — Run inside PSSession on 10.168.0.32
+        <button class="copy-btn" onclick="copyCode(this,'cmd3')">Copy</button>
+      </div>
+      <pre id="cmd3"><span class="comment"># ── CHECK CURRENT VALUES FIRST ──────────────────────────────</span>
+<span class="kw">Get-ItemProperty</span> <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> `
+    | <span class="kw">Select-Object</span> Shell, Userinit
+
+<span class="comment"># Shell should be:    explorer.exe</span>
+<span class="comment"># Userinit should be: C:\Windows\system32\userinit.exe,</span>
+<span class="comment"># If wrong — run the fix below</span>
+
+<span class="comment"># ── FIX SHELL ────────────────────────────────────────────────</span>
+<span class="kw">Set-ItemProperty</span> `
+    -Path <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> `
+    -Name <span class="str">"Shell"</span> `
+    -Value <span class="str">"explorer.exe"</span>
+
+<span class="comment"># ── FIX USERINIT ─────────────────────────────────────────────</span>
+<span class="kw">Set-ItemProperty</span> `
+    -Path <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> `
+    -Name <span class="str">"Userinit"</span> `
+    -Value <span class="str">"C:\Windows\system32\userinit.exe,"</span>
+
+<span class="comment"># ── VERIFY FIX APPLIED ───────────────────────────────────────</span>
+<span class="kw">Get-ItemProperty</span> <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> `
+    | <span class="kw">Select-Object</span> Shell, Userinit
+
+<span class="ok">Write-Host</span> <span class="str">"Winlogon registry fixed!"</span> -ForegroundColor Green</pre>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-label lbl-red">❌ BAD Values (broken)</div>
+        <pre style="font-size:12px;">Shell    : cmd.exe
+         <span class="comment">or blank</span>
+Userinit : <span class="err">(blank or wrong path)</span></pre>
+      </div>
+      <div class="card">
+        <div class="card-label lbl-green">✅ CORRECT Values (after fix)</div>
+        <pre style="font-size:12px;">Shell    : <span class="ok">explorer.exe</span>
+Userinit : <span class="ok">C:\Windows\system32\userinit.exe,</span>
+           <span class="comment">(note trailing comma)</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 4 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-orange">4</div>
+      <div class="section-title">
+        Confirm RDP Enabled + Restart Services
+        <small>Run inside PSSession — ensures RDP service is active after registry change</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-orange">
+        RDP Check + Service Restart — Inside PSSession
+        <button class="copy-btn" onclick="copyCode(this,'cmd4')">Copy</button>
+      </div>
+      <pre id="cmd4"><span class="comment"># ── CONFIRM RDP IS ENABLED ───────────────────────────────────</span>
+<span class="val">$rdp</span> = <span class="kw">Get-ItemProperty</span> <span class="str">"HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server"</span>
+<span class="kw">Write-Host</span> <span class="str">"fDenyTSConnections = $($rdp.fDenyTSConnections)"</span>
+<span class="comment"># Must be 0 — if it's 1, RDP is disabled</span>
+
+<span class="comment"># ── ENABLE RDP IF DISABLED ───────────────────────────────────</span>
+<span class="kw">Set-ItemProperty</span> -Path <span class="str">"HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server"</span> `
+                 -Name <span class="str">"fDenyTSConnections"</span> -Value <span class="val">0</span>
+
+<span class="comment"># ── ALLOW RDP THROUGH WINDOWS FIREWALL ──────────────────────</span>
+<span class="kw">Enable-NetFirewallRule</span> -DisplayGroup <span class="str">"Remote Desktop"</span>
+
+<span class="comment"># ── RESTART REMOTE DESKTOP SERVICES ─────────────────────────</span>
+<span class="kw">Stop-Service</span>  -Name TermService -Force
+<span class="kw">Start-Sleep</span>   -Seconds 4
+<span class="kw">Start-Service</span> -Name TermService
+
+<span class="comment"># ── VERIFY SERVICE IS RUNNING ────────────────────────────────</span>
+<span class="kw">Get-Service</span> TermService | <span class="kw">Select-Object</span> Name, Status
+
+<span class="ok">Write-Host</span> <span class="str">"RDP services restarted — test connection now!"</span> -ForegroundColor Green</pre>
+    </div>
+
+    <div class="note note-yellow">
+      <span class="note-icon">⚡</span>
+      <span>After this step — <strong>exit PSSession and immediately test RDP</strong> to <code>10.168.0.32</code>. It should work now. Come back to Step 5 to install the permanent patch during maintenance window.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-teal">Exit PSSession</div>
+      <pre><span class="kw">Exit-PSSession</span>
+<span class="comment"># Prompt returns to your local machine</span>
+<span class="comment"># NOW TEST RDP: mstsc /v:10.168.0.32</span></pre>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 5 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-purple">5</div>
+      <div class="section-title">
+        Install Permanent Patch — KB5078766 (Server 2019)
+        <small>Permanent fix — schedule with SAP team during maintenance window</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="background:rgba(176,136,255,.05); color:#b088ff; border-bottom:1px solid var(--border);">
+        Patch Reference Table — Windows Server 2019
+      </div>
+      <table>
+        <tr>
+          <th>Patch</th><th>Type</th><th>OS Version</th><th>Build</th><th>Status</th>
+        </tr>
+        <tr>
+          <td class="td-kb">KB5074109</td>
+          <td class="td-bad">BAD — REMOVE</td>
+          <td>Server 2019</td>
+          <td>Jan 2026 Patch Tuesday</td>
+          <td class="td-bad">Broke RDP/Winlogon</td>
+        </tr>
+        <tr>
+          <td class="td-kb">KB5077795</td>
+          <td style="color:var(--orange); font-weight:700;">Emergency OOB</td>
+          <td>Server 2019</td>
+          <td>Jan 17 2026</td>
+          <td style="color:var(--orange); font-weight:700;">Partial fix (use if 5078766 unavailable)</td>
+        </tr>
+        <tr>
+          <td class="td-kb">KB5078766</td>
+          <td class="td-good">INSTALL THIS</td>
+          <td>Server 2019</td>
+          <td>March 2026 CU</td>
+          <td class="td-good">Permanent fix ✓</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="background:rgba(176,136,255,.05); color:#b088ff; border-bottom:1px solid var(--border);">
+        Check + Remove Bad Patch + Install Fix — Run inside PSSession
+        <button class="copy-btn" onclick="copyCode(this,'cmd5')">Copy</button>
+      </div>
+      <pre id="cmd5"><span class="comment"># ── CHECK WHICH BAD PATCHES ARE INSTALLED ───────────────────</span>
+<span class="val">$badList</span> = @(<span class="str">'KB5074109'</span>,<span class="str">'KB5073457'</span>,<span class="str">'KB5073450'</span>,<span class="str">'KB5073455'</span>)
+<span class="kw">Get-HotFix</span> | <span class="kw">Where-Object</span> { <span class="val">$badList</span> -contains <span class="val">$_</span>.HotFixID } | <span class="kw">Select</span> HotFixID, InstalledOn
+
+<span class="comment"># ── REMOVE BAD PATCH IF FOUND ───────────────────────────────</span>
+<span class="kw">Start-Process</span> wusa.exe -ArgumentList <span class="str">"/uninstall /kb:5074109 /quiet /norestart"</span> -Wait
+
+<span class="comment"># ── CHECK IF FIX ALREADY INSTALLED ──────────────────────────</span>
+<span class="kw">Get-HotFix</span> -Id <span class="str">KB5078766</span> -ErrorAction SilentlyContinue
+
+<span class="comment"># ── IF NOT INSTALLED — download .msu from catalog ───────────</span>
+<span class="comment"># On any internet machine, go to:</span>
+<span class="comment"># https://catalog.update.microsoft.com/Search.aspx?q=KB5078766</span>
+<span class="comment"># Download the x64 .msu file</span>
+<span class="comment"># Copy it to: C:\Temp\KB5078766.msu  on the SAP server</span>
+
+<span class="comment"># ── INSTALL FROM .MSU FILE ───────────────────────────────────</span>
+<span class="kw">Start-Process</span> wusa.exe `
+    -ArgumentList <span class="str">"C:\Temp\KB5078766.msu /quiet /norestart"</span> `
+    -Wait -PassThru | <span class="kw">Select-Object</span> ExitCode
+
+<span class="comment"># ExitCode 0 = success  |  3010 = success + reboot needed</span>
+
+<span class="comment"># ── SCHEDULE REBOOT (SAP maintenance window) ─────────────────</span>
+<span class="kw">shutdown.exe</span> /r /t <span class="val">300</span> /c <span class="str">"RDP fix - KB5078766 installed - coordinate with SAP team"</span>
+<span class="comment"># /t 300 = 5 minute warning before reboot</span></pre>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 6 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num num-teal">6</div>
+      <div class="section-title">
+        Verify Everything — Final Checks
+        <small>Run after reboot to confirm server is clean</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-teal">
+        Verification Commands — Run inside PSSession after reboot
+        <button class="copy-btn" onclick="copyCode(this,'cmd6')">Copy</button>
+      </div>
+      <pre id="cmd6"><span class="comment"># ── WINLOGON VERIFY ─────────────────────────────────────────</span>
+<span class="kw">Get-ItemProperty</span> <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> `
+    | <span class="kw">Select</span> Shell, Userinit
+<span class="comment"># Shell    → explorer.exe</span>
+<span class="comment"># Userinit → C:\Windows\system32\userinit.exe,</span>
+
+<span class="comment"># ── CONFIRM PATCH INSTALLED ──────────────────────────────────</span>
+<span class="kw">Get-HotFix</span> -Id KB5078766
+<span class="comment"># Should show installation date</span>
+
+<span class="comment"># ── CONFIRM BAD PATCH GONE ───────────────────────────────────</span>
+<span class="kw">Get-HotFix</span> -Id KB5074109 -ErrorAction SilentlyContinue
+<span class="comment"># Should return NOTHING — means it was removed</span>
+
+<span class="comment"># ── RDP SERVICE STATUS ───────────────────────────────────────</span>
+<span class="kw">Get-Service</span> TermService | <span class="kw">Select</span> Name, Status, StartType
+<span class="comment"># Status should be: Running</span>
+
+<span class="comment"># ── OS BUILD AFTER PATCH ─────────────────────────────────────</span>
+<span class="kw">Get-ComputerInfo</span> | <span class="kw">Select</span> WindowsProductName, OsVersion, OsBuildNumber
+
+<span class="comment"># ── LAST 10 PATCHES (confirm March 2026 CU on top) ──────────</span>
+<span class="kw">Get-HotFix</span> | <span class="kw">Sort-Object</span> InstalledOn -Descending | <span class="kw">Select-Object</span> -First <span class="val">10</span> HotFixID, InstalledOn</pre>
+    </div>
+
+    <div class="outcome-box">
+      <h4>✅ Expected Outcomes After All Steps</h4>
+      <ul>
+        <li>Winlogon Shell = <code>explorer.exe</code></li>
+        <li>Winlogon Userinit = <code>C:\Windows\system32\userinit.exe,</code></li>
+        <li>KB5074109 NOT present in Get-HotFix</li>
+        <li>KB5078766 shows in Get-HotFix with March 2026 date</li>
+        <li>TermService Status = Running</li>
+        <li>RDP connects and user desktop loads normally</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- AZURE RUN COMMAND FALLBACK -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num" style="color:var(--red);border-color:var(--red);background:rgba(255,60,90,.08);">!</div>
+      <div class="section-title">
+        Fallback — If PSSession Still Fails, Use Azure Run Command
+        <small>Azure portal → VM → Operations → Run command → RunPowerShellScript</small>
+      </div>
+    </div>
+
+    <div class="note note-red">
+      <span class="note-icon">🔑</span>
+      <span>If WinRM/PSSession cannot connect at all, go to the Azure portal. Navigate to VM <code>c006app01otpd3ab462fa6fb707d</code> → <strong>Operations</strong> → <strong>Run command</strong> → <strong>RunPowerShellScript</strong>. Paste the commands from Steps 3 and 4 directly. This bypasses WinRM entirely and uses the Azure VM agent.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label lbl-red">
+        Minimal Azure Run Command — Paste directly in portal
+        <button class="copy-btn" onclick="copyCode(this,'cmdaz')">Copy</button>
+      </div>
+      <pre id="cmdaz"><span class="comment"># PASTE THIS IN AZURE PORTAL → RUN COMMAND → RunPowerShellScript</span>
+<span class="val">$p</span> = <span class="str">"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span>
+
+<span class="kw">Set-ItemProperty</span> -Path <span class="val">$p</span> -Name <span class="str">"Shell"</span>    -Value <span class="str">"explorer.exe"</span>
+<span class="kw">Set-ItemProperty</span> -Path <span class="val">$p</span> -Name <span class="str">"Userinit"</span> -Value <span class="str">"C:\Windows\system32\userinit.exe,"</span>
+<span class="kw">Set-ItemProperty</span> -Path <span class="str">"HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server"</span> `
+                 -Name <span class="str">"fDenyTSConnections"</span> -Value <span class="val">0</span>
+<span class="kw">Enable-NetFirewallRule</span> -DisplayGroup <span class="str">"Remote Desktop"</span>
+<span class="kw">Stop-Service</span>  TermService -Force
+<span class="kw">Start-Sleep</span>   4
+<span class="kw">Start-Service</span> TermService
+
+<span class="kw">Get-ItemProperty</span> <span class="val">$p</span> | <span class="kw">Select</span> Shell, Userinit
+<span class="ok">Write-Host</span> <span class="str">"DONE — test RDP to 10.168.0.32 now"</span> -ForegroundColor Green</pre>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <div>Target: <strong>10.168.0.32</strong> &nbsp;|&nbsp; VM: <strong>c006app01otpd3ab462fa6fb707d</strong> &nbsp;|&nbsp; OS: <strong>Windows Server 2019 Datacenter</strong></div>
+  <div>Root Cause: <strong>KB5074109</strong> &nbsp;|&nbsp; Fix: Winlogon registry + <strong>KB5078766</strong></div>
+</footer>
+
+<script>
+function copyCode(btn, id) {
+  const pre = document.getElementById(id);
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
