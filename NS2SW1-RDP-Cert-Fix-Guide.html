@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NS2SW1APP1 - RDP Certificate Fix Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f8fafc; color: #1e293b; }
+  .hdr { background: #0f172a; color: #fff; padding: 28px 40px; }
+  .hdr h1 { font-size: 22px; margin: 0; }
+  .hdr p { font-size: 13px; opacity: .75; margin-top: 6px; }
+  .meta { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 16px 40px; display: flex; gap: 40px; flex-wrap: wrap; }
+  .meta-item { font-size: 13px; }
+  .meta-item span { font-weight: bold; color: #1e3a8a; display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+  .sec { padding: 28px 40px; }
+  .sec + .sec { border-top: 1px solid #e2e8f0; }
+  h2 { font-size: 17px; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 6px; margin-bottom: 16px; }
+  h3 { font-size: 14px; color: #374151; margin: 20px 0 10px; }
+  p { font-size: 13px; line-height: 1.7; margin-bottom: 10px; color: #374151; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  th { background: #1e3a8a; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:hover { background: #f8fafc; }
+  .badge-us { background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  .badge-ca { background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  .code-block { background: #1e293b; border-radius: 6px; padding: 14px 18px; margin: 8px 0 16px; font-family: 'Courier New', monospace; font-size: 13px; color: #86efac; line-height: 1.8; overflow-x: auto; }
+  .code-block .comment { color: #94a3b8; }
+  .info-box { border-left: 5px solid #1e40af; background: #dbeafe; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 13px; color: #1e40af; }
+  .warn-box { border-left: 5px solid #d97706; background: #fef3c7; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 13px; color: #92400e; }
+  .success-box { border-left: 5px solid #065f46; background: #d1fae5; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 13px; color: #065f46; }
+  .step-box { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+  .step-hdr { padding: 12px 18px; font-weight: bold; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 12px; }
+  .step-num { background: rgba(255,255,255,0.25); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; }
+  .step-body { padding: 16px 18px; background: #fff; }
+  .step-body p { margin-bottom: 8px; }
+  ul { margin: 8px 0 12px 20px; font-size: 13px; line-height: 1.8; color: #374151; }
+  ol { margin: 8px 0 12px 20px; font-size: 13px; line-height: 1.8; color: #374151; }
+  .tag-key { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+  .tag-ok { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+  .tag-info { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+  .kpi { display: flex; gap: 16px; padding: 16px 40px; background: #fff; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+  .kpi-box { flex: 1; min-width: 160px; border-radius: 8px; padding: 14px 16px; text-align: center; }
+  .kpi-box .val { font-size: 26px; font-weight: 700; }
+  .kpi-box .lbl { font-size: 11px; margin-top: 4px; text-transform: uppercase; }
+  .gray { background: #f1f5f9; } .gray .val { color: #374151; }
+  .green { background: #d1fae5; } .green .val { color: #065f46; }
+  .blue { background: #dbeafe; } .blue .val { color: #1e40af; }
+  .dark { background: #0f172a; } .dark .val { color: #86efac; } .dark .lbl { color: #94a3b8; }
+  .ftr { padding: 16px 40px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>NS2SW1APP1 - RDP Certificate Fix Guide</h1>
+  <p>Navy IL4 | Complete Certificate Process and Script Instructions | Author: Syed Rizvi | IT Infrastructure Lead</p>
+</div>
+
+<div class="meta">
+  <div class="meta-item"><span>Server</span>ns2sw1app1</div>
+  <div class="meta-item"><span>IP Address</span>10.134.4.171</div>
+  <div class="meta-item"><span>OS</span>Windows Server 2022</div>
+  <div class="meta-item"><span>FQDN</span>ns2sw1app1.ns2corp.local</div>
+  <div class="meta-item"><span>Certificate</span>cert-sw1</div>
+  <div class="meta-item"><span>Key Size</span>2048-bit RSA</div>
+  <div class="meta-item"><span>Script</span>Fix-RDP-Cert-NS2SW1.ps1</div>
+  <div class="meta-item"><span>Date</span>March 31, 2026</div>
+</div>
+
+<div class="kpi">
+  <div class="kpi-box gray"><div class="val">3</div><div class="lbl">Script Steps</div></div>
+  <div class="kpi-box green"><div class="val">2048</div><div class="lbl">Key Size Bits</div></div>
+  <div class="kpi-box blue"><div class="val">Auto</div><div class="lbl">IIS + RDP Binding</div></div>
+  <div class="kpi-box dark"><div class="val">100%</div><div class="lbl">Automated</div></div>
+</div>
+
+<!-- HOW TO RUN -->
+<div class="sec">
+  <h2>HOW TO RUN THE SCRIPT ON NS2SW1APP1</h2>
+  <p>Follow these steps exactly. RDP into the server, copy the script, and run as Administrator.</p>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#1e3a8a">
+      <div class="step-num">1</div>
+      RDP Into the Server
+    </div>
+    <div class="step-body">
+      <p>Connect via RDP to ns2sw1app1 at IP <strong>10.134.4.171</strong> using your admin credentials.</p>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#1e3a8a">
+      <div class="step-num">2</div>
+      Copy the Script to the Server
+    </div>
+    <div class="step-body">
+      <p>Copy <strong>Fix-RDP-Cert-NS2SW1.ps1</strong> to the following folder on the server. Create the folder if it does not exist.</p>
+      <div class="code-block">C:\Certs\Fix-RDP-Cert-NS2SW1.ps1</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#1e3a8a">
+      <div class="step-num">3</div>
+      Open PowerShell as Administrator
+    </div>
+    <div class="step-body">
+      <p>Click Start, search for <strong>PowerShell</strong>, right-click it and select <strong>Run as Administrator</strong>. This is required — the script will not work without admin rights.</p>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#1e3a8a">
+      <div class="step-num">4</div>
+      Allow Script Execution and Navigate to Folder
+    </div>
+    <div class="step-body">
+      <p>Paste these two commands into PowerShell and press Enter after each one:</p>
+      <div class="code-block">Set-ExecutionPolicy Bypass -Scope Process -Force
+cd C:\Certs</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#065f46">
+      <div class="step-num">5</div>
+      Command 1 - VALIDATE - Check Current Certificate
+    </div>
+    <div class="step-body">
+      <p>Run this first to see the current state of the certificate, key size, IIS binding, and RDP binding.</p>
+      <div class="code-block">.\Fix-RDP-Cert-NS2SW1.ps1 -Step VALIDATE</div>
+      <p><strong>What it checks:</strong></p>
+      <ul>
+        <li>Existing cert-sw1 in the machine certificate store</li>
+        <li>Key size — must be 2048-bit</li>
+        <li>Private key presence</li>
+        <li>SAN (Subject Alternative Name) — DNS and IP entries</li>
+        <li>Certificate expiry</li>
+        <li>IIS HTTPS binding on port 443</li>
+        <li>RDP certificate binding via WMI</li>
+      </ul>
+      <div class="info-box">All output and logs are automatically saved to C:\Certs\cert-fix-log.txt</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#065f46">
+      <div class="step-num">6</div>
+      Command 2 - GENERATECSR - Create New 2048-bit Certificate Request
+    </div>
+    <div class="step-body">
+      <p>This generates a brand new private key and CSR on the server with all correct parameters.</p>
+      <div class="code-block">.\Fix-RDP-Cert-NS2SW1.ps1 -Step GENERATECSR</div>
+      <p><strong>What it creates:</strong></p>
+      <ul>
+        <li>A new 2048-bit private key stored securely on ns2sw1app1</li>
+        <li>CSR file at <strong>C:\Certs\ns2sw1app1-CSR.txt</strong></li>
+        <li>CN set to ns2sw1app1.ns2corp.local</li>
+        <li>SAN includes DNS: ns2sw1app1, DNS: ns2sw1app1.ns2corp.local, IP: 10.134.4.171</li>
+      </ul>
+      <div class="warn-box"><strong>After running this command:</strong> Send the file C:\Certs\ns2sw1app1-CSR.txt to the Certificate Authority for signing. Wait for the signed certificate file to be returned before running Step 7.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#065f46">
+      <div class="step-num">7</div>
+      Command 3 - IMPORT - Install Signed Certificate and Bind Everything
+    </div>
+    <div class="step-body">
+      <p>Run this once the CA returns the signed certificate file. Replace <strong>signed.cer</strong> with the actual filename the CA sends back.</p>
+      <div class="code-block">.\Fix-RDP-Cert-NS2SW1.ps1 -Step IMPORT -SignedCertPath "C:\Certs\signed.cer"</div>
+      <p><strong>What it does automatically — no manual steps needed:</strong></p>
+      <ol>
+        <li>Runs certreq -accept to import and pair the signed cert with the private key on ns2sw1app1</li>
+        <li>Sets the certificate friendly name to cert-sw1</li>
+        <li>Removes any old HTTPS binding from IIS</li>
+        <li>Creates a new IIS HTTPS binding on port 443 with the new certificate</li>
+        <li>Falls back to netsh if WebAdministration module is unavailable</li>
+        <li>Binds the certificate to RDP services via WMI</li>
+        <li>Falls back to registry binding if WMI is unavailable</li>
+        <li>Restarts the RDP service (TermService) to apply all changes</li>
+        <li>Runs final validation and prints PASS or WARN for each item</li>
+        <li>Saves full log to C:\Certs\cert-fix-log.txt</li>
+      </ol>
+      <div class="success-box">After this runs successfully the RDP certificate error will be resolved and users will be able to connect without invalid certificate warnings.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CERT PROCESS -->
+<div class="sec">
+  <h2>HOW THE CERTIFICATE PROCESS WORKS</h2>
+  <p>This section explains the standard certificate workflow so all parties have a clear shared understanding of each step.</p>
+  <table>
+    <tr><th style="width:60px">Step</th><th style="width:180px">Responsible Party</th><th>Action</th></tr>
+    <tr><td style="text-align:center;font-weight:bold">1</td><td><span class="badge-us">IT Infrastructure</span></td><td>Generate CSR on ns2sw1app1. Private key is created and stays on the server. Only the CSR file is shared.</td></tr>
+    <tr><td style="text-align:center;font-weight:bold">2</td><td><span class="badge-us">IT Infrastructure</span></td><td>Send the CSR file to the Certificate Authority for signing. This is the only file that leaves the server.</td></tr>
+    <tr><td style="text-align:center;font-weight:bold">3</td><td><span class="badge-ca">Certificate Authority</span></td><td>CA signs the CSR and produces a signed certificate (.cer or .crt). The signed certificate is returned to IT Infrastructure.</td></tr>
+    <tr><td style="text-align:center;font-weight:bold">4</td><td><span class="badge-us">IT Infrastructure</span></td><td>Import the signed cert on ns2sw1app1. Script pairs it with the private key and binds to IIS and RDP automatically.</td></tr>
+  </table>
+  <div class="info-box">The certificate is issued for ns2sw1app1.ns2corp.local (IP: 10.134.4.171). The signed certificate must be returned to IT Infrastructure for installation on that server, as the matching private key only exists there.</div>
+</div>
+
+<!-- FILE TYPES -->
+<div class="sec">
+  <h2>CERTIFICATE FILE TYPES EXPLAINED</h2>
+  <table>
+    <tr><th style="width:160px">File Type</th><th style="width:220px">Contains</th><th>Purpose</th></tr>
+    <tr><td><code>CSR (.txt)</code></td><td>Public key request only</td><td>Sent to CA for signing. Does not contain private key.</td></tr>
+    <tr style="background:#d1fae5"><td><code>.cer or .crt</code></td><td>Signed certificate only</td><td><strong style="color:#065f46">Returned by CA to IT Infrastructure. This is what gets installed on ns2sw1app1.</strong></td></tr>
+    <tr style="background:#fef3c7"><td><code>PFX / PKCS12</code></td><td>Cert AND private key with password</td><td>Used for backup only. Created by IT Infrastructure after installation. Not required by CA.</td></tr>
+    <tr style="background:#fee2e2"><td><code>Private Key</code></td><td>Private key only</td><td><strong style="color:#991b1b">Remains on ns2sw1app1 at all times. Never shared externally.</strong></td></tr>
+  </table>
+  <h3>Does the Script Create a PFX</h3>
+  <p>Yes. After the signed certificate is imported, you can optionally export a PFX backup file using this command:</p>
+  <div class="code-block">certutil -exportPFX -p "YourPassword" My cert-sw1 C:\Certs\cert-sw1-backup.pfx</div>
+  <p>This creates a password-protected PFX for backup. This step is optional and performed after the certificate is fully operational.</p>
+</div>
+
+<!-- QUICK REFERENCE -->
+<div class="sec">
+  <h2>QUICK REFERENCE - ALL 3 COMMANDS</h2>
+  <div class="code-block">
+<span class="comment"># Step 1 - Run as Administrator, allow execution, navigate to script</span>
+Set-ExecutionPolicy Bypass -Scope Process -Force
+cd C:\Certs
+
+<span class="comment"># Step 2 - Validate current certificate state</span>
+.\Fix-RDP-Cert-NS2SW1.ps1 -Step VALIDATE
+
+<span class="comment"># Step 3 - Generate new 2048-bit CSR - then send C:\Certs\ns2sw1app1-CSR.txt to CA</span>
+.\Fix-RDP-Cert-NS2SW1.ps1 -Step GENERATECSR
+
+<span class="comment"># Step 4 - Once CA returns signed cert - import and bind everything automatically</span>
+.\Fix-RDP-Cert-NS2SW1.ps1 -Step IMPORT -SignedCertPath "C:\Certs\signed.cer"</div>
+</div>
+
+<div class="ftr">
+  Prepared by Syed Rizvi | IT Infrastructure Lead | March 31, 2026 | CONFIDENTIAL - Internal Use Only
+</div>
+
+</body>
+</html>
