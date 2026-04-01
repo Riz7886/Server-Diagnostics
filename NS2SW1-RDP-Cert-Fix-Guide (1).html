@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NS2SW1APP1 - RDP Certificate Fix Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f8fafc; color: #1e293b; }
+  .hdr { background: #0f172a; color: #fff; padding: 28px 40px; }
+  .hdr h1 { font-size: 22px; }
+  .hdr p { font-size: 13px; opacity: .75; margin-top: 6px; }
+  .meta { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 16px 40px; display: flex; gap: 32px; flex-wrap: wrap; }
+  .meta-item { font-size: 13px; }
+  .meta-item span { font-weight: bold; color: #1e3a8a; display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+  .sec { padding: 24px 40px; border-top: 1px solid #e2e8f0; }
+  h2 { font-size: 17px; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 6px; margin-bottom: 16px; }
+  h3 { font-size: 14px; color: #374151; margin: 20px 0 8px; font-weight: bold; }
+  p { font-size: 13px; line-height: 1.7; margin-bottom: 10px; color: #374151; }
+  .code-block { background: #1e293b; border-radius: 6px; padding: 14px 18px; margin: 8px 0 14px; font-family: 'Courier New', monospace; font-size: 13px; color: #86efac; line-height: 1.9; overflow-x: auto; }
+  .code-block .comment { color: #64748b; }
+  .code-block .warn-line { color: #fbbf24; }
+  .info { border-left: 5px solid #1e40af; background: #dbeafe; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; color: #1e40af; line-height: 1.7; }
+  .warn { border-left: 5px solid #d97706; background: #fef3c7; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; color: #92400e; line-height: 1.7; }
+  .success { border-left: 5px solid #065f46; background: #d1fae5; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; color: #065f46; line-height: 1.7; }
+  .danger { border-left: 5px solid #991b1b; background: #fee2e2; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 10px 0; font-size: 13px; color: #991b1b; line-height: 1.7; }
+  .step-box { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 18px; overflow: hidden; }
+  .step-hdr { padding: 12px 18px; font-weight: bold; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 12px; }
+  .step-num { background: rgba(255,255,255,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; }
+  .step-body { padding: 16px 18px; background: #fff; }
+  ul { margin: 8px 0 12px 20px; font-size: 13px; line-height: 1.9; color: #374151; }
+  ol { margin: 8px 0 12px 20px; font-size: 13px; line-height: 1.9; color: #374151; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 14px; }
+  th { background: #1e3a8a; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .badge-us { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+  .badge-ca { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+  .ftr { padding: 16px 40px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #e2e8f0; }
+  .scenario-hdr { background: #1e3a8a; color: #fff; padding: 10px 16px; border-radius: 6px 6px 0 0; font-weight: bold; font-size: 13px; margin-top: 20px; }
+  .scenario-body { border: 1px solid #1e3a8a; border-top: none; border-radius: 0 0 6px 6px; padding: 14px 16px; background: #fff; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>NS2SW1APP1 - RDP Certificate Fix - Complete Command Reference</h1>
+  <p>Navy IL4 | Every Command You Need | Author: Syed Rizvi | IT Infrastructure Lead | April 1, 2026</p>
+</div>
+
+<div class="meta">
+  <div class="meta-item"><span>Server</span>ns2sw1app1</div>
+  <div class="meta-item"><span>IP Address</span>10.134.4.171</div>
+  <div class="meta-item"><span>OS</span>Windows Server 2022</div>
+  <div class="meta-item"><span>FQDN</span>ns2sw1app1.ns2corp.local</div>
+  <div class="meta-item"><span>Certificate</span>cert-sw1</div>
+  <div class="meta-item"><span>Key Size</span>2048-bit RSA</div>
+  <div class="meta-item"><span>Script Location</span>C:\temp\cert-sw1\Fix-RDP-Cert-NS2W1.ps1</div>
+</div>
+
+<!-- ALWAYS DO FIRST -->
+<div class="sec">
+  <h2>ALWAYS DO THIS FIRST - SETUP</h2>
+
+  <div class="step-box">
+    <div class="step-hdr" style="background:#0f172a">
+      <div class="step-num">1</div>Open PowerShell as Administrator on ns2sw1app1
+    </div>
+    <div class="step-body">
+      <p>Right-click PowerShell and select Run as Administrator. Then run:</p>
+      <div class="code-block">Set-ExecutionPolicy Bypass -Scope Process -Force
+cd C:\temp\cert-sw1</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENARIO A - VALIDATE -->
+<div class="sec">
+  <h2>SCENARIO A - CHECK WHAT IS IN THE CERT STORE</h2>
+  <p>Run this first every time to see the current state of the certificate store.</p>
+  <div class="code-block">.\Fix-RDP-Cert-NS2W1.ps1 -Step VALIDATE</div>
+  <div class="success">If it shows Total certs in store: 0 — the cert is not imported yet. Go to Scenario B or C below.</div>
+</div>
+
+<!-- SCENARIO B - IMPORT EXISTING PFX NO PASSWORD -->
+<div class="sec">
+  <h2>SCENARIO B - IMPORT EXISTING PFX FILE (NO PASSWORD)</h2>
+  <p>The PFX file sw1.pfx already exists in C:\temp\cert-sw1\. If it was created without a password use this command to import it into the machine certificate store.</p>
+
+  <h3>Option 1 - Import with no password (try this first)</h3>
+  <div class="code-block">$pwd = ConvertTo-SecureString -String "" -Force -AsPlainText
+Import-PfxCertificate -FilePath "C:\temp\cert-sw1\sw1.pfx" -CertStoreLocation Cert:\LocalMachine\My -Password $pwd</div>
+
+  <h3>Option 2 - Import with a password (if Option 1 fails)</h3>
+  <div class="code-block">$pwd = Read-Host "Enter PFX password" -AsSecureString
+Import-PfxCertificate -FilePath "C:\temp\cert-sw1\sw1.pfx" -CertStoreLocation Cert:\LocalMachine\My -Password $pwd</div>
+
+  <h3>After importing - validate immediately</h3>
+  <div class="code-block">.\Fix-RDP-Cert-NS2W1.ps1 -Step VALIDATE</div>
+
+  <div class="warn">After import, if VALIDATE shows the cert is there but key size is wrong or SAN is missing, go to Scenario D to generate a fresh CSR instead.</div>
+</div>
+
+<!-- SCENARIO C - CHECK IF CERT EXISTS BUT WRONG STORE -->
+<div class="sec">
+  <h2>SCENARIO C - FIND THE CERT IF IT IS IN THE WRONG STORE</h2>
+  <p>Sometimes the cert is in the Current User store instead of Local Machine store. Run these to find it.</p>
+
+  <h3>Check all stores for any cert with sw1 in the name</h3>
+  <div class="code-block"><span class="comment"># Check Local Machine store</span>
+Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -like "*sw1*" -or $_.FriendlyName -like "*sw1*" }
+
+<span class="comment"># Check Current User store</span>
+Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*sw1*" -or $_.FriendlyName -like "*sw1*" }
+
+<span class="comment"># Show ALL certs in Local Machine store</span>
+Get-ChildItem Cert:\LocalMachine\My | Select-Object FriendlyName, Subject, NotAfter, Thumbprint</div>
+
+  <h3>If cert is in Current User store - move it to Local Machine (RUN THIS NOW)</h3>
+  <div class="code-block"><span class="comment"># Get the thumbprint from the output above then run this</span>
+$cert = Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -like "*sw1*" }
+$store = New-Object System.Security.Cryptography.X509Certificates.X509Store("My","LocalMachine")
+$store.Open("ReadWrite")
+$store.Add($cert)
+$store.Close()
+Write-Host "Cert moved to LocalMachine\My"
+
+<span class="comment"># Option 2 - Move first cert in store if Option 1 finds nothing</span>
+$cert = Get-ChildItem Cert:\CurrentUser\My | Select-Object -First 1
+$store = New-Object System.Security.Cryptography.X509Certificates.X509Store("My","LocalMachine")
+$store.Open("ReadWrite")
+$store.Add($cert)
+$store.Close()
+Write-Host "Done - cert moved to LocalMachine"</div>
+</div>
+
+<!-- SCENARIO D - GENERATE NEW CSR -->
+<div class="sec">
+  <h2>SCENARIO D - GENERATE BRAND NEW 2048-BIT CSR</h2>
+  <p>Use this if the existing cert is invalid, expired, wrong key size, or missing SAN. This creates a fresh private key and CSR on the server.</p>
+
+  <div class="code-block">.\Fix-RDP-Cert-NS2W1.ps1 -Step GENERATECSR</div>
+
+  <p>This creates two files:</p>
+  <ul>
+    <li><strong>C:\temp\cert-sw1\ns2sw1app1-request.inf</strong> — the configuration file</li>
+    <li><strong>C:\temp\cert-sw1\ns2sw1app1-CSR.txt</strong> — send this to the CA for signing</li>
+  </ul>
+
+  <div class="warn"><strong>After running GENERATECSR:</strong> Send the file ns2sw1app1-CSR.txt to the Certificate Authority. Wait for the signed .cer file to come back before running the IMPORT step.</div>
+
+  <h3>Manually generate CSR if the script fails</h3>
+  <div class="code-block">certreq -new "C:\temp\cert-sw1\sw1_csr.inf" "C:\temp\cert-sw1\ns2sw1app1-CSR.txt"</div>
+</div>
+
+<!-- SCENARIO E - IMPORT SIGNED CERT FROM CA -->
+<div class="sec">
+  <h2>SCENARIO E - IMPORT SIGNED CERTIFICATE FROM CA AND BIND EVERYTHING</h2>
+  <p>Run this once the CA returns the signed certificate file. Replace signed.cer with the actual filename.</p>
+
+  <div class="code-block">.\Fix-RDP-Cert-NS2W1.ps1 -Step IMPORT -SignedCertPath "C:\temp\cert-sw1\signed.cer"</div>
+
+  <p>This automatically does everything:</p>
+  <ol>
+    <li>Imports the signed cert and pairs with private key using certreq -accept</li>
+    <li>Sets friendly name to cert-sw1</li>
+    <li>Removes old IIS HTTPS binding</li>
+    <li>Creates new IIS HTTPS binding on port 443</li>
+    <li>Binds cert to RDP via WMI</li>
+    <li>Falls back to registry if WMI fails</li>
+    <li>Restarts RDP service (TermService)</li>
+    <li>Runs full validation and prints PASS or WARN</li>
+  </ol>
+
+  <h3>Manually import signed cert if script fails</h3>
+  <div class="code-block">certreq -accept "C:\temp\cert-sw1\signed.cer"</div>
+</div>
+
+<!-- SCENARIO F - MANUALLY BIND TO RDP -->
+<div class="sec">
+  <h2>SCENARIO F - MANUALLY BIND CERT TO RDP IF SCRIPT DOES NOT DO IT</h2>
+  <p>If the cert is imported but RDP still shows invalid cert, bind it manually.</p>
+
+  <h3>Get the thumbprint of the cert first</h3>
+  <div class="code-block">Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" -or $_.Subject -like "*sw1*" } | Select-Object Thumbprint, Subject, FriendlyName</div>
+
+  <h3>Bind to RDP via WMI using thumbprint from above</h3>
+  <div class="code-block"><span class="comment"># Replace THUMBPRINTHERE with the actual thumbprint from above</span>
+$tp = "THUMBPRINTHERE"
+$TSSettings = Get-WmiObject -Namespace root\cimv2\TerminalServices -Class Win32_TSGeneralSetting
+$TSSettings.SSLCertificateSHA1Hash = $tp
+$TSSettings.Put()
+Write-Host "RDP cert bound successfully"</div>
+
+  <h3>Restart RDP service after binding</h3>
+  <div class="code-block">Restart-Service TermService -Force
+Write-Host "RDP service restarted"</div>
+
+  <h3>Verify RDP binding worked</h3>
+  <div class="code-block">$rdp = Get-WmiObject -Namespace root\cimv2\TerminalServices -Class Win32_TSGeneralSetting
+Write-Host "RDP Cert Thumbprint: $($rdp.SSLCertificateSHA1Hash)"</div>
+</div>
+
+<!-- SCENARIO G - MANUALLY BIND TO IIS -->
+<div class="sec">
+  <h2>SCENARIO G - MANUALLY BIND CERT TO IIS PORT 443</h2>
+  <p>If IIS HTTPS binding needs to be set manually.</p>
+
+  <h3>Get thumbprint first then bind to IIS</h3>
+  <div class="code-block">Import-Module WebAdministration
+
+<span class="comment"># Get thumbprint</span>
+$cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" } | Select-Object -First 1
+$tp = $cert.Thumbprint
+Write-Host "Thumbprint: $tp"
+
+<span class="comment"># Remove old binding if exists</span>
+Get-WebBinding -Name "Default Web Site" -Protocol "https" | Remove-WebBinding
+
+<span class="comment"># Create new binding</span>
+New-WebBinding -Name "Default Web Site" -Protocol "https" -Port 443 -IPAddress "*"
+$binding = Get-WebBinding -Name "Default Web Site" -Protocol "https"
+$binding.AddSslCertificate($tp, "My")
+Write-Host "IIS binding complete"</div>
+
+  <h3>If WebAdministration fails use netsh instead</h3>
+  <div class="code-block"><span class="comment"># Get thumbprint first</span>
+$cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" } | Select-Object -First 1
+$tp = $cert.Thumbprint
+$guid = [System.Guid]::NewGuid().ToString("B")
+
+<span class="comment"># Remove old binding</span>
+netsh http delete sslcert ipport=0.0.0.0:443
+
+<span class="comment"># Add new binding</span>
+netsh http add sslcert ipport=0.0.0.0:443 certhash=$tp appid=$guid
+Write-Host "netsh binding complete"</div>
+</div>
+
+<!-- SCENARIO H - EXPORT PFX BACKUP -->
+<div class="sec">
+  <h2>SCENARIO H - EXPORT PFX BACKUP AFTER CERT IS WORKING</h2>
+  <p>Once the cert is installed and working, export a PFX backup file with a password.</p>
+
+  <div class="code-block"><span class="comment"># Export PFX with password</span>
+certutil -exportPFX -p "YourPasswordHere" My cert-sw1 "C:\temp\cert-sw1\cert-sw1-backup.pfx"
+Write-Host "PFX backup saved to C:\temp\cert-sw1\cert-sw1-backup.pfx"</div>
+
+  <h3>Alternative - Export using PowerShell</h3>
+  <div class="code-block">$cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" } | Select-Object -First 1
+$pwd = ConvertTo-SecureString -String "YourPasswordHere" -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath "C:\temp\cert-sw1\cert-sw1-backup.pfx" -Password $pwd
+Write-Host "PFX exported successfully"</div>
+</div>
+
+<!-- SCENARIO I - FULL VALIDATION -->
+<div class="sec">
+  <h2>SCENARIO I - FULL MANUAL VALIDATION - CONFIRM EVERYTHING IS WORKING</h2>
+  <p>Run all of these to confirm the cert is fully installed and bound correctly.</p>
+
+  <div class="code-block"><span class="comment"># 1. Check cert is in store</span>
+Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" -or $_.Subject -like "*sw1*" } | Select-Object FriendlyName, Subject, NotAfter, Thumbprint
+
+<span class="comment"># 2. Check key size is 2048</span>
+$cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*sw1*" } | Select-Object -First 1
+Write-Host "Key Size: $($cert.PublicKey.Key.KeySize)-bit"
+Write-Host "Has Private Key: $($cert.HasPrivateKey)"
+Write-Host "Expiry: $($cert.NotAfter)"
+
+<span class="comment"># 3. Check RDP binding</span>
+$rdp = Get-WmiObject -Namespace root\cimv2\TerminalServices -Class Win32_TSGeneralSetting
+Write-Host "RDP Cert: $($rdp.SSLCertificateSHA1Hash)"
+
+<span class="comment"># 4. Check IIS binding</span>
+Import-Module WebAdministration
+Get-WebBinding -Protocol "https" | Select-Object bindingInformation
+
+<span class="comment"># 5. Check RDP service is running</span>
+Get-Service TermService | Select-Object Name, Status</div>
+
+  <div class="success"><strong>All good when you see:</strong> Key Size: 2048-bit, Has Private Key: True, RDP Cert matches thumbprint, IIS binding shows 0.0.0.0:443, TermService Status: Running</div>
+</div>
+
+<!-- QUICK REFERENCE -->
+<div class="sec">
+  <h2>QUICK REFERENCE - MOST LIKELY SCENARIO TODAY</h2>
+  <div class="code-block"><span class="comment"># Setup</span>
+Set-ExecutionPolicy Bypass -Scope Process -Force
+cd C:\temp\cert-sw1
+
+<span class="comment"># Step 1 - Validate</span>
+.\Fix-RDP-Cert-NS2W1.ps1 -Step VALIDATE
+
+<span class="comment"># Step 2a - Try importing existing PFX with no password</span>
+$pwd = ConvertTo-SecureString -String "" -Force -AsPlainText
+Import-PfxCertificate -FilePath "C:\temp\cert-sw1\sw1.pfx" -CertStoreLocation Cert:\LocalMachine\My -Password $pwd
+
+<span class="comment"># Step 2b - Or generate fresh 2048-bit CSR if PFX import fails</span>
+.\Fix-RDP-Cert-NS2W1.ps1 -Step GENERATECSR
+
+<span class="comment"># Step 3 - After CA returns signed cert - import and bind everything</span>
+.\Fix-RDP-Cert-NS2W1.ps1 -Step IMPORT -SignedCertPath "C:\temp\cert-sw1\signed.cer"
+
+<span class="comment"># Step 4 - Validate everything worked</span>
+.\Fix-RDP-Cert-NS2W1.ps1 -Step VALIDATE</div>
+</div>
+
+<div class="ftr">Prepared by Syed Rizvi | IT Infrastructure Lead | April 1, 2026 | CONFIDENTIAL - Internal Use Only</div>
+
+</body>
+</html>
