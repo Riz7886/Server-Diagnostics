@@ -1,23 +1,17 @@
 # ============================================================
-# IL5 PATCH SCRIPT - SUPPORT0001 PCE SERVER (FIXED)
+# IL5 PATCH SCRIPT - SUPPORT0001 PCE - AWS CLI VERSION
 # April 2026 - Run as Administrator on CLIENT SERVER
-# Bucket: ns2-il5-s4-support0001-sc-ssm-patching
-# Real S3 path: windows_patch/april-2026/
+# Uses aws s3 cp because Read-S3Object hangs in this env
 # ============================================================
 
 $ErrorActionPreference = 'Stop'
 
-# Make sure AWS module is loaded
-try { Import-Module AWSPowerShell -ErrorAction Stop }
-catch { Import-Module AWS.Tools.S3 -ErrorAction Stop }
-
 # --- Config ---
 $bucket      = "ns2-il5-s4-support0001-sc-ssm-patching"
 $region      = "us-gov-west-1"
-$s3Prefix    = "windows_patch/april-2026"          # FULL month - NOT "apr-2026"
+$s3Prefix    = "windows_patch/april-2026"
 $localFolder = "C:\Temp\Patches\apr-2026"
 
-# Patch list - keys match S3 object names EXACTLY (verified from S3 console)
 $patches = @(
     [pscustomobject]@{ Name="Chrome";    S3Key="$s3Prefix/GoogleChromeStandaloneEnterprise64.msi"; Local="$localFolder\chrome.msi"  }
     [pscustomobject]@{ Name="Edge";      S3Key="$s3Prefix/MicrosoftEdgeEnterpriseX64.msi";         Local="$localFolder\edge.msi"    }
@@ -33,7 +27,7 @@ Write-Host "Folder ready: $localFolder" -ForegroundColor Green
 # ============== DOWNLOAD PHASE ==============
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "DOWNLOAD PHASE - $($patches.Count) files from S3" -ForegroundColor Cyan
+Write-Host "DOWNLOAD PHASE - aws s3 cp" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 $i = 0
@@ -44,26 +38,18 @@ foreach ($p in $patches) {
     Write-Host "  S3:    s3://$bucket/$($p.S3Key)"
     Write-Host "  Local: $($p.Local)"
 
-    try {
-        Read-S3Object -BucketName $bucket -Key $p.S3Key -File $p.Local -Region $region | Out-Null
-    } catch {
-        Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
-        throw "Download failed for $($p.Name) - check S3 key spelling"
-    }
+    & aws s3 cp "s3://$bucket/$($p.S3Key)" "$($p.Local)" --region $region
 
-    if (-not (Test-Path $p.Local)) {
-        throw "FAIL: $($p.Name) file does not exist after download"
-    }
+    if ($LASTEXITCODE -ne 0) { throw "aws s3 cp failed (exit $LASTEXITCODE) for $($p.Name)" }
+    if (-not (Test-Path $p.Local)) { throw "FAIL: $($p.Name) file missing" }
     $sz = (Get-Item $p.Local).Length
-    if ($sz -eq 0) {
-        throw "FAIL: $($p.Name) is 0 bytes - download did not work"
-    }
+    if ($sz -eq 0) { throw "FAIL: $($p.Name) is 0 bytes" }
     $mb = [math]::Round($sz / 1MB, 1)
     Write-Host "  OK - $mb MB" -ForegroundColor Green
 }
 
 Write-Host ""
-Write-Host "All $($patches.Count) patches downloaded successfully" -ForegroundColor Green
+Write-Host "All $($patches.Count) patches downloaded:" -ForegroundColor Green
 Get-ChildItem $localFolder | Format-Table Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}, LastWriteTime
 
 # ============== INSTALL PHASE ==============
@@ -97,7 +83,7 @@ $edge = ($patches | Where-Object Name -eq "Edge").Local
 $proc = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i","`"$edge`"","/quiet","/norestart" -Wait -PassThru
 Show-ExitCode "Edge" $proc.ExitCode
 
-# 3. Defender platform update (mpam-fe.exe runs silently with no args)
+# 3. Defender (mpam-fe.exe runs silently with no args)
 Write-Host ""
 Write-Host "[3/4] Installing Defender (mpam-fe.exe)..." -ForegroundColor Yellow
 $def = ($patches | Where-Object Name -eq "Defender").Local
