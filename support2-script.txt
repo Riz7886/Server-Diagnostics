@@ -1,0 +1,21 @@
+New-Item -ItemType Directory -Path "C:\Temp\Patches\april2026" -Force | Out-Null
+Write-Host "Folder: C:\Temp\Patches\april2026" -ForegroundColor Green
+
+Write-Host "[1/4] Downloading Chrome..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/GoogleChromeStandaloneEnterprise64.msi" -File "C:\Temp\Patches\april2026\GoogleChromeStandaloneEnterprise64.msi" -Region "us-gov-west-1"
+Write-Host "  Chrome downloaded!" -ForegroundColor Green
+
+Write-Host "[2/4] Downloading Edge..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/MicrosoftEdgeEnterpriseX64.msi" -File "C:\Temp\Patches\april2026\MicrosoftEdgeEnterpriseX64.msi" -Region "us-gov-west-1"
+Write-Host "  Edge downloaded!" -ForegroundColor Green
+
+Write-Host "[3/4] Downloading Defender..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/mpam-fe.exe" -File "C:\Temp\Patches\april2026\mpam-fe.exe" -Region "us-gov-west-1"
+Write-Host "  Defender downloaded!" -ForegroundColor Green
+
+Write-Host "[4/4] Downloading Windows KB..." -ForegroundColor Yellow
+Read-S3Object -BucketName "ns2-il5-s4-support0002-sc-ssm-patching" -Key "patches/windows_patch/kb-apr-2026.msu" -File "C:\Temp\Patches\april2026\kb-apr-2026.msu" -Region "us-gov-west-1"
+Write-Host "  KB downloaded!" -ForegroundColor Green
+
+Write-Host "ALL DOWNLOADED" -ForegroundColor Cyan
+Get-ChildItem C:\Temp\Patches\april2026
