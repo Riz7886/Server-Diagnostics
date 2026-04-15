@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SAP NS2 IL5 — Master Patching Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;700;900&display=swap');
+:root{--bg:#07090f;--panel:#0d1220;--border:#1a2540;--green:#00ff88;--yellow:#ffd600;--red:#ff4455;--blue:#4fc3f7;--orange:#ff9800;--purple:#c084fc;--white:#e8f0fe;--dim:#4a6080;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Barlow',sans-serif;padding:20px;font-size:15px;line-height:1.6;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0a1628 0%,#0d2040 50%,#0a2818 100%);border:2px solid var(--green);border-radius:14px;padding:36px;margin-bottom:28px;text-align:center;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--blue),var(--purple),var(--orange));animation:glow 3s linear infinite;}
+@keyframes glow{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+.header h1{font-size:1.8em;font-weight:900;color:var(--green);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+.header p{color:var(--dim);font-size:0.85em;font-family:'Share Tech Mono';}
+.conf-badge{display:inline-block;background:rgba(255,68,85,0.2);color:var(--red);border:1px solid var(--red);padding:4px 18px;border-radius:20px;font-size:0.75em;font-weight:700;margin-top:10px;letter-spacing:2px;}
+
+/* MONTH CONFIG */
+.month-config{background:linear-gradient(135deg,#1a1500,#0d1220);border:2px solid var(--yellow);border-radius:10px;padding:20px 24px;margin-bottom:28px;text-align:center;}
+.month-config h2{color:var(--yellow);font-size:1.1em;margin-bottom:8px;}
+.month-config .month-display{font-family:'Share Tech Mono';font-size:2em;color:var(--yellow);background:#000;padding:8px 24px;border-radius:6px;display:inline-block;border:1px solid rgba(255,214,0,0.3);margin:6px 0;}
+.month-config p{color:var(--dim);font-size:0.82em;font-family:'Share Tech Mono';}
+.month-input-row{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:12px;flex-wrap:wrap;}
+.month-input-row select,.month-input-row input{background:#0a0e18;border:1px solid var(--yellow);color:var(--yellow);font-family:'Share Tech Mono';font-size:1em;padding:8px 14px;border-radius:6px;text-align:center;}
+.month-input-row button{background:var(--yellow);color:#000;font-weight:900;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.95em;}
+.month-input-row button:hover{background:#fff;}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:16px 0;justify-content:center;}
+.flow-box{flex:1;min-width:120px;background:var(--panel);border-radius:8px;padding:12px 8px;text-align:center;border:2px solid var(--border);}
+.flow-box h4{font-size:0.72em;margin-bottom:4px;letter-spacing:1px;}
+.flow-box p{font-size:0.68em;color:var(--dim);font-family:'Share Tech Mono';line-height:1.4;}
+.fb1{border-color:#ff6d00;} .fb1 h4{color:#ffab40;}
+.fb2{border-color:#00bfa5;} .fb2 h4{color:#64ffda;}
+.fb3{border-color:#7c4dff;} .fb3 h4{color:#b388ff;}
+.fb4{border-color:#2979ff;} .fb4 h4{color:#82b1ff;}
+.fb5{border-color:#d50000;} .fb5 h4{color:#ff8a80;}
+.arrow{font-size:1.4em;color:var(--green);flex-shrink:0;}
+
+/* SECTIONS */
+.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:24px;overflow:hidden;}
+.sec-head{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.step-num{padding:5px 18px;border-radius:20px;font-size:0.82em;font-weight:900;letter-spacing:1px;white-space:nowrap;}
+.sn-green{background:var(--green);color:#000;} .sn-blue{background:var(--blue);color:#000;} .sn-orange{background:var(--orange);color:#000;} .sn-purple{background:var(--purple);color:#000;} .sn-red{background:var(--red);color:#fff;}
+.where-tag{font-size:0.7em;font-family:'Share Tech Mono';padding:3px 12px;border-radius:20px;white-space:nowrap;}
+.wt-local{background:rgba(255,171,64,0.12);color:#ffab40;border:1px solid rgba(255,171,64,0.3);}
+.wt-sftp{background:rgba(100,255,218,0.12);color:#64ffda;border:1px solid rgba(100,255,218,0.3);}
+.wt-jump{background:rgba(179,136,255,0.12);color:#b388ff;border:1px solid rgba(179,136,255,0.3);}
+.wt-s3{background:rgba(130,177,255,0.12);color:#82b1ff;border:1px solid rgba(130,177,255,0.3);}
+.wt-server{background:rgba(255,138,128,0.12);color:#ff8a80;border:1px solid rgba(255,138,128,0.3);}
+.sec-title{font-weight:900;font-size:1.05em;flex:1;}
+.body{padding:20px 22px;}
+
+/* ALERTS */
+.al{font-size:0.85em;padding:10px 14px;border-radius:5px;margin-bottom:14px;border-left:4px solid;line-height:1.6;}
+.al.y{color:var(--yellow);background:rgba(255,214,0,0.06);border-color:var(--yellow);}
+.al.g{color:var(--green);background:rgba(0,255,136,0.06);border-color:var(--green);}
+.al.r{color:var(--red);background:rgba(255,68,85,0.06);border-color:var(--red);}
+.al.b{color:var(--blue);background:rgba(79,195,247,0.06);border-color:var(--blue);}
+.al.o{color:var(--orange);background:rgba(255,152,0,0.06);border-color:var(--orange);}
+.al.p{color:var(--purple);background:rgba(192,132,252,0.06);border-color:var(--purple);}
+
+/* CODE BLOCKS */
+.cb{background:#04060d;border:1px solid var(--border);border-radius:6px;padding:16px 18px;font-family:'Share Tech Mono',monospace;font-size:0.82em;line-height:1.9;position:relative;margin-bottom:12px;white-space:pre-wrap;word-break:break-all;overflow-x:auto;}
+.cm{color:#4a6080;} .cc{color:#00ff88;} .cv{color:#c084fc;} .cs{color:#ffd600;} .cp{color:#4fc3f7;} .cr{color:#ff4455;} .co{color:#ff9800;}
+.btn{position:absolute;top:10px;right:10px;background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.4);color:var(--green);font-family:'Barlow';font-size:0.78em;font-weight:700;padding:5px 16px;border-radius:4px;cursor:pointer;transition:all 0.15s;letter-spacing:1px;}
+.btn:hover{background:rgba(0,255,136,0.25);} .btn.ok{background:rgba(0,255,136,0.35);color:#fff;}
+
+/* LABELS */
+.sl{font-size:0.9em;font-weight:700;color:var(--yellow);margin:14px 0 6px;}
+.sl.g{color:var(--green);} .sl.b{color:var(--blue);} .sl.r{color:var(--red);} .sl.o{color:var(--orange);} .sl.p{color:var(--purple);}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.88em;}
+th{background:#0a1a30;color:var(--green);text-align:left;padding:10px 14px;font-size:0.85em;letter-spacing:1px;}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:#ccc;vertical-align:top;}
+tr:nth-child(even) td{background:rgba(13,18,32,0.5);}
+code{background:#0a1525;color:#80cbc4;padding:2px 6px;border-radius:3px;font-family:'Share Tech Mono';font-size:0.88em;}
+
+/* TABS */
+.tab-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.tab{background:#04060d;border:1px solid var(--border);color:var(--dim);padding:8px 18px;border-radius:6px 6px 0 0;cursor:pointer;font-size:0.85em;font-weight:700;transition:all 0.15s;}
+.tab.active{background:var(--panel);border-bottom:2px solid var(--green);color:var(--green);}
+.tab-content{display:none;} .tab-content.active{display:block;}
+
+/* CHECKLIST */
+.check-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.chk{width:20px;height:20px;border:2px solid var(--green);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.chk.done{background:var(--green);} .chk.done::after{content:'✓';color:#000;font-size:12px;font-weight:900;}
+.chk-label{color:#bbb;font-size:0.85em;line-height:1.5;}
+
+/* MONTH HIGHLIGHT */
+.mv{color:var(--yellow);font-weight:900;background:rgba(255,214,0,0.1);padding:0 4px;border-radius:3px;}
+
+/* FOOTER */
+.footer{text-align:center;padding:24px;color:var(--dim);font-size:0.78em;border-top:1px solid var(--border);margin-top:10px;font-family:'Share Tech Mono';}
+</style>
+</head>
+<body>
+
+<!-- ======================= HEADER ======================= -->
+<div class="header">
+  <h1>SAP NS2 IL5 — Master Patching Guide</h1>
+  <p>Complete Air-Gapped Pipeline · Auto-Download · All Scripts · PCE & Sidecar Servers</p>
+  <div class="conf-badge">CONFIDENTIAL — INTERNAL USE ONLY</div>
+</div>
+
+<!-- ======================= MONTH CONFIG ======================= -->
+<div class="month-config">
+  <h2>CHANGE MONTH HERE — Flows Through ALL Scripts</h2>
+  <div class="month-display" id="monthDisplay">apr-2026</div>
+  <p>Every path, S3 key, and folder name below uses this month. Change once — done.</p>
+  <div class="month-input-row">
+    <select id="monthSelect">
+      <option value="jan">January</option><option value="feb">February</option><option value="mar">March</option>
+      <option value="apr" selected>April</option><option value="may">May</option><option value="jun">June</option>
+      <option value="jul">July</option><option value="aug">August</option><option value="sep">September</option>
+      <option value="oct">October</option><option value="nov">November</option><option value="dec">December</option>
+    </select>
+    <input type="number" id="yearInput" value="2026" min="2025" max="2035" style="width:90px;">
+    <button onclick="updateMonth()">UPDATE ALL SCRIPTS</button>
+  </div>
+</div>
+
+<!-- ======================= FLOW DIAGRAM ======================= -->
+<div class="section">
+  <div class="sec-head"><div class="sec-title" style="color:var(--green);">PIPELINE FLOW — 5 Hops Through Air Gap</div></div>
+  <div class="body">
+    <div class="flow">
+      <div class="flow-box fb1"><h4>LOCAL LAPTOP</h4><p>Auto-download<br>4 patches to<br>C:\Temp\Patches\<span class="mv mval">apr-2026</span></p></div>
+      <div class="arrow">&#8594;</div>
+      <div class="flow-box fb2"><h4>WinSCP &#8594; IL5 SFTP</h4><p>Upload to<br>/vnosc-il5-artifacts/<br>s4pce/C5406751/<span class="mv mval">apr-2026</span></p></div>
+      <div class="arrow">&#8594;</div>
+      <div class="flow-box fb3"><h4>SecureFX JUMPHOST</h4><p>Download to<br>C:\Users\c5406751\<br><span class="mv mval">apr-2026</span>\</p></div>
+      <div class="arrow">&#8594;</div>
+      <div class="flow-box fb4"><h4>AWS S3 BUCKETS</h4><p>Upload via<br>AWS Console browser<br>Rename KB short name</p></div>
+      <div class="arrow">&#8594;</div>
+      <div class="flow-box fb5"><h4>CLIENT SERVERS</h4><p>Read-S3Object<br>Download + Install<br>Verify + Reboot</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 1: AUTO-DOWNLOAD ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-orange">STEP 1</span>
+    <span class="where-tag wt-local">LOCAL LAPTOP (Has Internet)</span>
+    <div class="sec-title">Auto-Download All 4 Patches</div>
+  </div>
+  <div class="body">
+    <div class="al g">This script runs on your LOCAL work laptop (the one with internet). It downloads Chrome, Edge, Defender, and the CURRENT MONTH's Windows Server 2019 Cumulative Update from the Microsoft Update Catalog. No guessing KB numbers — it finds the right one automatically.</div>
+    <div class="al y">Paste this into PowerShell (Run as Administrator) on your local laptop. It creates a dated folder and downloads everything.</div>
+
+    <div class="cb" id="s1"><button class="btn" onclick="cp('s1',this)">COPY</button><span class="cm"># ================================================</span>
+<span class="cm"># SAP NS2 IL5 — Auto Patch Downloader</span>
+<span class="cm"># Run on LOCAL LAPTOP with Internet — PowerShell as Admin</span>
+<span class="cm"># Downloads: Chrome, Edge, Defender, Windows KB (Server 2019)</span>
+<span class="cm"># Finds CURRENT month KB from Microsoft Update Catalog</span>
+<span class="cm"># ================================================</span>
+
+<span class="cv">$Month</span>    = <span class="cs">"<span class="mval">apr-2026</span>"</span>
+<span class="cv">$MonthNum</span> = <span class="cs">"<span class="mval-num">04</span>"</span>
+<span class="cv">$Year</span>     = <span class="cs">"<span class="mval-year">2026</span>"</span>
+<span class="cv">$DownDir</span>  = <span class="cs">"C:\Temp\Patches\$Month"</span>
+
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"  SAP NS2 IL5 — Patch Downloader — $Month"</span> -ForegroundColor Green
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+
+<span class="cm"># Create download folder</span>
+New-Item -ItemType Directory -Path <span class="cv">$DownDir</span> -Force | Out-Null
+Write-Host <span class="cs">"Download folder: $DownDir"</span> -ForegroundColor Green
+
+<span class="cm"># ------- 1. CHROME ENTERPRISE -------</span>
+Write-Host <span class="cs">"`n[1/4] Downloading Chrome Enterprise..."</span> -ForegroundColor Yellow
+<span class="cv">$chromeUrl</span> = <span class="cs">"https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi"</span>
+<span class="cv">$chromeDst</span> = <span class="cs">"$DownDir\GoogleChromeStandaloneEnterprise64.msi"</span>
+try {
+    Invoke-WebRequest -Uri <span class="cv">$chromeUrl</span> -OutFile <span class="cv">$chromeDst</span> -UseBasicParsing
+    Write-Host <span class="cs">"  Chrome: $([math]::Round((Get-Item $chromeDst).Length/1MB))MB"</span> -ForegroundColor Green
+} catch { Write-Host <span class="cs">"  Chrome FAILED: $_"</span> -ForegroundColor Red }
+
+<span class="cm"># ------- 2. EDGE ENTERPRISE -------</span>
+Write-Host <span class="cs">"`n[2/4] Downloading Edge Enterprise..."</span> -ForegroundColor Yellow
+<span class="cv">$edgeUrl</span> = <span class="cs">"https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/latest/MicrosoftEdgeEnterpriseX64.msi"</span>
+<span class="cv">$edgeDst</span> = <span class="cs">"$DownDir\MicrosoftEdgeEnterpriseX64.msi"</span>
+try {
+    Invoke-WebRequest -Uri <span class="cv">$edgeUrl</span> -OutFile <span class="cv">$edgeDst</span> -UseBasicParsing
+    Write-Host <span class="cs">"  Edge: $([math]::Round((Get-Item $edgeDst).Length/1MB))MB"</span> -ForegroundColor Green
+} catch { Write-Host <span class="cs">"  Edge FAILED: $_"</span> -ForegroundColor Red }
+
+<span class="cm"># ------- 3. DEFENDER SIGNATURES -------</span>
+Write-Host <span class="cs">"`n[3/4] Downloading Defender Signatures..."</span> -ForegroundColor Yellow
+<span class="cv">$defUrl</span> = <span class="cs">"https://go.microsoft.com/fwlink/?LinkID=121721&amp;arch=x64"</span>
+<span class="cv">$defDst</span> = <span class="cs">"$DownDir\mpam-fe.exe"</span>
+try {
+    Invoke-WebRequest -Uri <span class="cv">$defUrl</span> -OutFile <span class="cv">$defDst</span> -UseBasicParsing
+    Write-Host <span class="cs">"  Defender: $([math]::Round((Get-Item $defDst).Length/1MB))MB"</span> -ForegroundColor Green
+} catch { Write-Host <span class="cs">"  Defender FAILED: $_"</span> -ForegroundColor Red }
+
+<span class="cm"># ------- 4. WINDOWS KB — FROM MICROSOFT UPDATE CATALOG -------</span>
+Write-Host <span class="cs">"`n[4/4] Searching Microsoft Update Catalog for Server 2019 CU..."</span> -ForegroundColor Yellow
+Write-Host <span class="cs">"  Searching: $Year-$MonthNum Cumulative Update for Windows Server 2019"</span> -ForegroundColor Gray
+
+<span class="cv">$SearchTerm</span> = <span class="cs">"$Year-$MonthNum Cumulative Update for Windows Server 2019 for x64"</span>
+<span class="cv">$CatalogURL</span> = <span class="cs">"https://www.catalog.update.microsoft.com/Search.aspx?q=$([uri]::EscapeDataString($SearchTerm))"</span>
+
+try {
+    <span class="cv">$SearchPage</span> = Invoke-WebRequest -Uri <span class="cv">$CatalogURL</span> -UseBasicParsing -ErrorAction Stop
+
+    <span class="cm"># Extract update IDs and titles from results</span>
+    <span class="cv">$IDMatches</span> = [regex]::Matches(<span class="cv">$SearchPage</span>.Content, <span class="cs">'goToDetails\("([a-f0-9\-]+)"\)'</span>)
+    <span class="cv">$TitleMatches</span> = [regex]::Matches(<span class="cv">$SearchPage</span>.Content, <span class="cs">'class="resulttitle"[^&gt;]*&gt;\s*&lt;span[^&gt;]*&gt;([^&lt;]+)'</span>)
+
+    <span class="cm"># Find the right CU — must say "Cumulative Update" and "Server 2019" and NOT "Dynamic"</span>
+    <span class="cv">$UpdateID</span> = <span class="cv">$null</span>
+    <span class="cv">$KBTitle</span>  = <span class="cs">""</span>
+    <span class="cv">$KBNumber</span> = <span class="cs">""</span>
+
+    for (<span class="cv">$i</span> = 0; <span class="cv">$i</span> -lt <span class="cv">$IDMatches</span>.Count; <span class="cv">$i</span>++) {
+        <span class="cv">$title</span> = if (<span class="cv">$i</span> -lt <span class="cv">$TitleMatches</span>.Count) { <span class="cv">$TitleMatches</span>[<span class="cv">$i</span>].Groups[1].Value } else { <span class="cs">""</span> }
+        if (<span class="cv">$title</span> -match <span class="cs">"Cumulative Update"</span> -and <span class="cv">$title</span> -match <span class="cs">"Server 2019"</span> -and <span class="cv">$title</span> -notmatch <span class="cs">"Dynamic"</span>) {
+            <span class="cv">$UpdateID</span> = <span class="cv">$IDMatches</span>[<span class="cv">$i</span>].Groups[1].Value
+            <span class="cv">$KBTitle</span>  = <span class="cv">$title</span>
+            if (<span class="cv">$title</span> -match <span class="cs">"(KB\d+)"</span>) { <span class="cv">$KBNumber</span> = <span class="cv">$Matches</span>[1] }
+            break
+        }
+    }
+
+    <span class="cm"># Fallback: try first result if specific match not found</span>
+    if (-not <span class="cv">$UpdateID</span> -and <span class="cv">$IDMatches</span>.Count -gt 0) {
+        <span class="cv">$UpdateID</span> = <span class="cv">$IDMatches</span>[0].Groups[1].Value
+        if (<span class="cv">$TitleMatches</span>.Count -gt 0) { <span class="cv">$KBTitle</span> = <span class="cv">$TitleMatches</span>[0].Groups[1].Value }
+        if (<span class="cv">$KBTitle</span> -match <span class="cs">"(KB\d+)"</span>) { <span class="cv">$KBNumber</span> = <span class="cv">$Matches</span>[1] }
+    }
+
+    if (<span class="cv">$UpdateID</span>) {
+        Write-Host <span class="cs">"  Found: $KBTitle"</span> -ForegroundColor Green
+        Write-Host <span class="cs">"  KB: $KBNumber | ID: $UpdateID"</span> -ForegroundColor Gray
+
+        <span class="cm"># Get download URL from catalog</span>
+        <span class="cv">$PostBody</span> = @{ updateIDs = <span class="cs">"[{`"size`":0,`"uidInfo`":`"$UpdateID`",`"updateID`":`"$UpdateID`"}]"</span> }
+        <span class="cv">$DownPage</span> = Invoke-WebRequest -Uri <span class="cs">"https://www.catalog.update.microsoft.com/DownloadDialog.aspx"</span> -Method Post -Body <span class="cv">$PostBody</span> -UseBasicParsing
+        <span class="cv">$DownURL</span> = [regex]::Match(<span class="cv">$DownPage</span>.Content, <span class="cs">"(http[s]?://[^'`"]*\.msu)"</span>).Value
+
+        if (<span class="cv">$DownURL</span>) {
+            Write-Host <span class="cs">"  Downloading $KBNumber (~800MB, be patient)..."</span> -ForegroundColor Yellow
+            <span class="cv">$kbDst</span> = <span class="cs">"$DownDir\kb-$Month.msu"</span>
+            Invoke-WebRequest -Uri <span class="cv">$DownURL</span> -OutFile <span class="cv">$kbDst</span> -UseBasicParsing
+            Write-Host <span class="cs">"  $KBNumber : $([math]::Round((Get-Item $kbDst).Length/1MB))MB — SAVED AS kb-$Month.msu"</span> -ForegroundColor Green
+        } else {
+            Write-Host <span class="cs">"  Could not extract download URL. Opening catalog in browser..."</span> -ForegroundColor Red
+            Start-Process <span class="cv">$CatalogURL</span>
+            Write-Host <span class="cs">"  Download the .msu manually and rename to: kb-$Month.msu"</span> -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host <span class="cs">"  No CU found for $Year-$MonthNum. Opening catalog..."</span> -ForegroundColor Red
+        Start-Process <span class="cv">$CatalogURL</span>
+        Write-Host <span class="cs">"  Download the .msu manually and rename to: kb-$Month.msu"</span> -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host <span class="cs">"  Catalog search failed: $_"</span> -ForegroundColor Red
+    Write-Host <span class="cs">"  Opening catalog in browser as fallback..."</span> -ForegroundColor Yellow
+    Start-Process <span class="cv">$CatalogURL</span>
+    Write-Host <span class="cs">"  Search for: $SearchTerm"</span> -ForegroundColor Yellow
+    Write-Host <span class="cs">"  Download the .msu and save as: $DownDir\kb-$Month.msu"</span> -ForegroundColor Yellow
+}
+
+<span class="cm"># ------- FINAL REPORT -------</span>
+Write-Host <span class="cs">"`n================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"  DOWNLOAD REPORT — $Month"</span> -ForegroundColor Green
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Get-ChildItem <span class="cv">$DownDir</span> | Format-Table Name, @{N=<span class="cs">"Size(MB)"</span>;E={[math]::Round($_.Length/1MB)}}, LastWriteTime -AutoSize
+Write-Host <span class="cs">"Total files: $((Get-ChildItem $DownDir).Count)"</span> -ForegroundColor Green
+Write-Host <span class="cs">"Location: $DownDir"</span> -ForegroundColor Green
+Write-Host <span class="cs">"`nNEXT: Open WinSCP and upload these 4 files to IL5 SFTP"</span> -ForegroundColor Yellow</div>
+
+    <div class="al o">If the auto-download for KB fails or picks the wrong one: go to <strong>catalog.update.microsoft.com</strong>, search for "<span class="mval-search">2026-04</span> Cumulative Update Windows Server 2019 x64", click Download on the right one, save to the same folder, rename to <strong>kb-<span class="mval">apr-2026</span>.msu</strong></div>
+
+    <div class="sl g">Expected files after download:</div>
+    <table>
+      <tr><th>File</th><th>~Size</th><th>Notes</th></tr>
+      <tr><td>GoogleChromeStandaloneEnterprise64.msi</td><td>~147 MB</td><td>Always latest stable</td></tr>
+      <tr><td>MicrosoftEdgeEnterpriseX64.msi</td><td>~197 MB</td><td>Always latest stable</td></tr>
+      <tr><td>mpam-fe.exe</td><td>~209 MB</td><td>Latest Defender signatures</td></tr>
+      <tr><td>kb-<span class="mval">apr-2026</span>.msu</td><td>~800 MB</td><td>Current month CU — already renamed!</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ======================= SECTION 2: WINSCP ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-green">STEP 2</span>
+    <span class="where-tag wt-sftp">LOCAL LAPTOP &#8594; WinSCP &#8594; IL5 SFTP</span>
+    <div class="sec-title">Upload to IL5 SFTP via WinSCP</div>
+  </div>
+  <div class="body">
+    <div class="al p">WinSCP runs on your LOCAL LAPTOP. It pushes files through the air gap to the IL5 SFTP server.</div>
+
+    <div class="sl o">WinSCP Connection Settings:</div>
+    <table>
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Protocol</td><td><code>SFTP</code></td></tr>
+      <tr><td>Host</td><td><code>sftp-inbound.sms.il5.sapns2.internal</code></td></tr>
+      <tr><td>Username</td><td><code>c5406751</code></td></tr>
+      <tr><td>Password</td><td>Your IL5 password</td></tr>
+    </table>
+
+    <div class="sl">Steps:</div>
+    <ol style="padding-left:22px;color:#bbb;font-size:0.9em;line-height:2;">
+      <li><strong>LEFT panel</strong> &#8594; navigate to: <code>C:\Temp\Patches\<span class="mval">apr-2026</span>\</code></li>
+      <li><strong>RIGHT panel</strong> &#8594; navigate to: <code>/vnosc-il5-artifacts-to-scan/s4pce/C5406751/</code></li>
+      <li><strong>RIGHT panel</strong> &#8594; right-click &#8594; <strong>New Directory</strong> &#8594; name it <code><span class="mval">apr-2026</span></code> &#8594; open it</li>
+      <li><strong>LEFT panel</strong> &#8594; Ctrl+A &#8594; <strong>F5</strong> to upload all 4 files</li>
+      <li>If <code>.filepart</code> error appears &#8594; click <strong>Skip All</strong> — files ARE uploaded</li>
+      <li>Verify 4 files appear in RIGHT panel with correct sizes</li>
+    </ol>
+
+    <div class="al y">If .filepart error keeps happening: WinSCP &#8594; Options &#8594; Preferences &#8594; Transfer &#8594; Endurance &#8594; Disable Resume Support &#8594; set to "Off"</div>
+    <div class="al r">KB file is already renamed to <strong>kb-<span class="mval">apr-2026</span>.msu</strong> from Step 1 — no additional renaming needed here.</div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 3: SecureFX ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-purple">STEP 3</span>
+    <span class="where-tag wt-jump">JUMPHOST &#8594; SecureFX &#8594; Download</span>
+    <div class="sec-title">Download from IL5 SFTP to Jumphost via SecureFX</div>
+  </div>
+  <div class="body">
+    <div class="al p">SecureFX is on the JUMPHOST. It connects to the SAME IL5 SFTP server to pull files down to the jumphost local drive.</div>
+
+    <div class="sl p">Steps:</div>
+    <ol style="padding-left:22px;color:#bbb;font-size:0.9em;line-height:2;">
+      <li>Open <strong>SecureFX</strong> on Jumphost &#8594; connect to <code>sftp-inbound.sms.il5.sapns2.internal</code></li>
+      <li><strong>LEFT panel</strong> &#8594; navigate to <code>C:\Users\c5406751\</code> &#8594; create folder <code><span class="mval">apr-2026</span></code> &#8594; open it</li>
+      <li><strong>RIGHT panel</strong> &#8594; navigate to <code>/vnosc-il5-artifacts-to-scan/s4pce/C5406751/<span class="mval">apr-2026</span>/</code></li>
+      <li>RIGHT panel &#8594; Ctrl+click each of the <strong>4 real files</strong> (SKIP any .filepart files!)</li>
+      <li><strong>Right-click</strong> selected files &#8594; <strong>Download</strong></li>
+      <li>Watch Transfer Queue at bottom &#8594; wait for all 4 to finish</li>
+    </ol>
+
+    <div class="al r">F5 does NOT work for download in SecureFX! Always use right-click &#8594; Download!</div>
+
+    <div class="sl g">Verify files on Jumphost — open PowerShell:</div>
+    <div class="cb" id="s3v"><button class="btn" onclick="cp('s3v',this)">COPY</button>dir C:\Users\c5406751\<span class="mval">apr-2026</span></div>
+
+    <div class="al g">You should see 4 files: Chrome MSI, Edge MSI, mpam-fe.exe, kb-<span class="mval">apr-2026</span>.msu</div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 4: AWS S3 ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-blue">STEP 4</span>
+    <span class="where-tag wt-s3">JUMPHOST &#8594; AWS Console &#8594; S3 Buckets</span>
+    <div class="sec-title">Upload to Both S3 Buckets via AWS Console</div>
+  </div>
+  <div class="body">
+    <div class="al b">AWS CLI is NOT installed on Jumphost. Use the AWS Console in the browser to upload files.</div>
+
+    <div class="sl b">BUCKET 1 — support0001 — WITH date folder:</div>
+    <ol style="padding-left:22px;color:#bbb;font-size:0.9em;line-height:2;">
+      <li>AWS Console &#8594; S3 &#8594; <code>ns2-il5-s4-support0001-sc-ssm-patching</code> &#8594; <code>windows_patch/</code></li>
+      <li>Click <strong>Create folder</strong> &#8594; name it <code><span class="mval">apr-2026</span></code> &#8594; open it</li>
+      <li>Click <strong>Upload</strong> &#8594; Add files &#8594; select all 4 from <code>C:\Users\c5406751\<span class="mval">apr-2026</span>\</code></li>
+      <li>Click Upload &#8594; wait for green success</li>
+    </ol>
+
+    <hr>
+
+    <div class="sl r">BUCKET 2 — support0002 — NO date folder EVER:</div>
+    <div class="al r">Server 2 NEVER gets a date subfolder! Upload directly into patches/windows_patch/ — files OVERWRITE last month.</div>
+    <ol style="padding-left:22px;color:#bbb;font-size:0.9em;line-height:2;">
+      <li>AWS Console &#8594; S3 &#8594; <code>ns2-il5-s4-support0002-sc-ssm-patching</code> &#8594; <code>patches/windows_patch/</code></li>
+      <li>Click <strong>Upload</strong> &#8594; Add files &#8594; select all 4 files</li>
+      <li>Click Upload &#8594; wait for green success</li>
+    </ol>
+
+    <hr>
+
+    <div class="sl y">RENAME KB in BOTH buckets after upload:</div>
+    <div class="al y">In each bucket: click the long KB filename &#8594; Actions &#8594; Rename &#8594; type <strong>kb-<span class="mval">apr-2026</span></strong> (NO extension — S3 keeps the .msu) &#8594; Save.</div>
+    <div class="al g">If you used the auto-downloader in Step 1, the file is already named <strong>kb-<span class="mval">apr-2026</span>.msu</strong> — you may not need to rename. Just verify the name in S3 is <strong>kb-<span class="mval">apr-2026</span>.msu</strong>.</div>
+
+    <table>
+      <tr><th>Bucket</th><th>Full S3 Path</th><th>Date Folder?</th></tr>
+      <tr><td><code>ns2-il5-s4-support0001-sc-ssm-patching</code></td><td><code>windows_patch/<span class="mval">apr-2026</span>/</code></td><td style="color:var(--green);">YES</td></tr>
+      <tr><td><code>ns2-il5-s4-support0002-sc-ssm-patching</code></td><td><code>patches/windows_patch/</code></td><td style="color:var(--red);">NO — NEVER</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ======================= SECTION 5: CLIENT SERVER INSTALL ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-red">STEP 5</span>
+    <span class="where-tag wt-server">CLIENT SERVER — Fleet Manager RDP</span>
+    <div class="sec-title">Download from S3 &amp; Install on Client Server</div>
+  </div>
+  <div class="body">
+    <div class="al r">Run on CLIENT SERVER only! PowerShell prompt must show: <strong>PS C:\Users\Administrator&gt;</strong></div>
+    <div class="al y">If Import-Module AWSPowerShell hangs: put <strong>#</strong> in front of that line. Module is usually already loaded.</div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(this,'tabA')">Script A — Support002 Sidecar</div>
+      <div class="tab" onclick="switchTab(this,'tabB')">Script B — Support001 PCE</div>
+    </div>
+
+    <!-- SCRIPT A -->
+    <div id="tabA" class="tab-content active">
+      <div class="al b" style="margin-top:10px;">Bucket: <code>ns2-il5-s4-support0002-sc-ssm-patching</code> — Path: <code>patches/windows_patch/</code> — NO date folder</div>
+      <div class="cb" id="sA"><button class="btn" onclick="cp('sA',this)">COPY</button><span class="cm"># ================================================</span>
+<span class="cm"># IL5 PATCH SCRIPT — SUPPORT002 SIDECAR SERVER</span>
+<span class="cm"># <span class="mval-full">April 2026</span> — Run as Administrator on CLIENT SERVER</span>
+<span class="cm"># ================================================</span>
+
+# Import-Module AWSPowerShell
+
+<span class="cm"># Create patch folder</span>
+New-Item -ItemType Directory -Path <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>"</span> -Force | Out-Null
+Write-Host <span class="cs">"Folder: C:\Temp\Patches\<span class="mval">apr-2026</span>"</span> -ForegroundColor Green
+
+<span class="cm"># Download Chrome</span>
+Write-Host <span class="cs">"[1/4] Downloading Chrome..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0002-sc-ssm-patching"</span> -Key <span class="cs">"patches/windows_patch/GoogleChromeStandaloneEnterprise64.msi"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\chrome.msi"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Chrome downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download Edge</span>
+Write-Host <span class="cs">"[2/4] Downloading Edge..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0002-sc-ssm-patching"</span> -Key <span class="cs">"patches/windows_patch/MicrosoftEdgeEnterpriseX64.msi"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\edge.msi"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Edge downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download Defender</span>
+Write-Host <span class="cs">"[3/4] Downloading Defender..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0002-sc-ssm-patching"</span> -Key <span class="cs">"patches/windows_patch/mpam-fe.exe"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\defender.exe"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Defender downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download KB — current month CU</span>
+Write-Host <span class="cs">"[4/4] Downloading Windows KB..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0002-sc-ssm-patching"</span> -Key <span class="cs">"patches/windows_patch/kb-<span class="mval">apr-2026</span>.msu"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\kb.msu"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  KB downloaded!"</span> -ForegroundColor Green
+
+Write-Host <span class="cs">"ALL DOWNLOADED — INSTALLING..."</span> -ForegroundColor Cyan
+
+<span class="cm"># Install Chrome</span>
+Write-Host <span class="cs">"Installing Chrome..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"msiexec.exe"</span> -ArgumentList <span class="cs">'/i "C:\Temp\Patches\<span class="mval">apr-2026</span>\chrome.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus'</span> -Wait
+Write-Host <span class="cs">"  Chrome installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Edge</span>
+Write-Host <span class="cs">"Installing Edge..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"msiexec.exe"</span> -ArgumentList <span class="cs">'/i "C:\Temp\Patches\<span class="mval">apr-2026</span>\edge.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus'</span> -Wait
+Write-Host <span class="cs">"  Edge installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Defender</span>
+Write-Host <span class="cs">"Installing Defender..."</span> -ForegroundColor Yellow
+Start-Process -FilePath <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\defender.exe"</span> -Wait
+Write-Host <span class="cs">"  Defender installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Windows KB</span>
+Write-Host <span class="cs">"Installing Windows KB..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"wusa.exe"</span> -ArgumentList <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\kb.msu /quiet /norestart"</span> -Wait
+Write-Host <span class="cs">"  KB installed!"</span> -ForegroundColor Green
+
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"ALL PATCHES INSTALLED — SUPPORT002 SIDECAR"</span> -ForegroundColor Green
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan</div>
+    </div>
+
+    <!-- SCRIPT B -->
+    <div id="tabB" class="tab-content">
+      <div class="al b" style="margin-top:10px;">Bucket: <code>ns2-il5-s4-support0001-sc-ssm-patching</code> — Path: <code>windows_patch/<span class="mval">apr-2026</span>/</code> — WITH date folder</div>
+      <div class="cb" id="sB"><button class="btn" onclick="cp('sB',this)">COPY</button><span class="cm"># ================================================</span>
+<span class="cm"># IL5 PATCH SCRIPT — SUPPORT001 PCE SERVER</span>
+<span class="cm"># <span class="mval-full">April 2026</span> — Run as Administrator on CLIENT SERVER</span>
+<span class="cm"># ================================================</span>
+
+# Import-Module AWSPowerShell
+
+<span class="cm"># Create patch folder</span>
+New-Item -ItemType Directory -Path <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>"</span> -Force | Out-Null
+Write-Host <span class="cs">"Folder: C:\Temp\Patches\<span class="mval">apr-2026</span>"</span> -ForegroundColor Green
+
+<span class="cm"># Download Chrome</span>
+Write-Host <span class="cs">"[1/4] Downloading Chrome..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0001-sc-ssm-patching"</span> -Key <span class="cs">"windows_patch/<span class="mval">apr-2026</span>/GoogleChromeStandaloneEnterprise64.msi"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\chrome.msi"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Chrome downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download Edge</span>
+Write-Host <span class="cs">"[2/4] Downloading Edge..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0001-sc-ssm-patching"</span> -Key <span class="cs">"windows_patch/<span class="mval">apr-2026</span>/MicrosoftEdgeEnterpriseX64.msi"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\edge.msi"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Edge downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download Defender</span>
+Write-Host <span class="cs">"[3/4] Downloading Defender..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0001-sc-ssm-patching"</span> -Key <span class="cs">"windows_patch/<span class="mval">apr-2026</span>/mpam-fe.exe"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\defender.exe"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  Defender downloaded!"</span> -ForegroundColor Green
+
+<span class="cm"># Download KB — current month CU</span>
+Write-Host <span class="cs">"[4/4] Downloading Windows KB..."</span> -ForegroundColor Yellow
+Read-S3Object -BucketName <span class="cs">"ns2-il5-s4-support0001-sc-ssm-patching"</span> -Key <span class="cs">"windows_patch/<span class="mval">apr-2026</span>/kb-<span class="mval">apr-2026</span>.msu"</span> -File <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\kb.msu"</span> -Region <span class="cs">"us-gov-west-1"</span>
+Write-Host <span class="cs">"  KB downloaded!"</span> -ForegroundColor Green
+
+Write-Host <span class="cs">"ALL DOWNLOADED — INSTALLING..."</span> -ForegroundColor Cyan
+
+<span class="cm"># Install Chrome</span>
+Write-Host <span class="cs">"Installing Chrome..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"msiexec.exe"</span> -ArgumentList <span class="cs">'/i "C:\Temp\Patches\<span class="mval">apr-2026</span>\chrome.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus'</span> -Wait
+Write-Host <span class="cs">"  Chrome installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Edge</span>
+Write-Host <span class="cs">"Installing Edge..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"msiexec.exe"</span> -ArgumentList <span class="cs">'/i "C:\Temp\Patches\<span class="mval">apr-2026</span>\edge.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus'</span> -Wait
+Write-Host <span class="cs">"  Edge installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Defender</span>
+Write-Host <span class="cs">"Installing Defender..."</span> -ForegroundColor Yellow
+Start-Process -FilePath <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\defender.exe"</span> -Wait
+Write-Host <span class="cs">"  Defender installed!"</span> -ForegroundColor Green
+
+<span class="cm"># Install Windows KB</span>
+Write-Host <span class="cs">"Installing Windows KB..."</span> -ForegroundColor Yellow
+Start-Process <span class="cs">"wusa.exe"</span> -ArgumentList <span class="cs">"C:\Temp\Patches\<span class="mval">apr-2026</span>\kb.msu /quiet /norestart"</span> -Wait
+Write-Host <span class="cs">"  KB installed!"</span> -ForegroundColor Green
+
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"ALL PATCHES INSTALLED — SUPPORT001 PCE"</span> -ForegroundColor Green
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 6: VERIFICATION ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-green">STEP 6</span>
+    <span class="where-tag wt-server">CLIENT SERVER</span>
+    <div class="sec-title">Verification Script — PASS/FAIL for Every Component</div>
+  </div>
+  <div class="body">
+    <div class="al g">Run this AFTER Step 5 on each client server. Shows PASS/FAIL for every patch. Screenshot this for your manager.</div>
+    <div class="cb" id="s6"><button class="btn" onclick="cp('s6',this)">COPY</button><span class="cm"># ================================================</span>
+<span class="cm"># IL5 PATCH VERIFICATION — PASS/FAIL REPORT</span>
+<span class="cm"># <span class="mval-full">April 2026</span> — Run on CLIENT SERVER after patching</span>
+<span class="cm"># ================================================</span>
+
+<span class="cv">$pass</span> = 0; <span class="cv">$fail</span> = 0
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"  PATCH VERIFICATION — $(Get-Date)"</span> -ForegroundColor Green
+Write-Host <span class="cs">"  Server: $env:COMPUTERNAME"</span> -ForegroundColor White
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+
+<span class="cm"># Chrome</span>
+Write-Host <span class="cs">"`n--- CHROME ---"</span> -ForegroundColor Yellow
+try {
+    <span class="cv">$cv</span> = (Get-Item <span class="cs">"C:\Program Files\Google\Chrome\Application\chrome.exe"</span> -ErrorAction Stop).VersionInfo.FileVersion
+    Write-Host <span class="cs">"  Version: $cv"</span> -ForegroundColor Green
+    Write-Host <span class="cs">"  [PASS] Chrome is installed and updated"</span> -ForegroundColor Green; <span class="cv">$pass</span>++
+} catch {
+    Write-Host <span class="cs">"  [FAIL] Chrome not found!"</span> -ForegroundColor Red; <span class="cv">$fail</span>++
+}
+
+<span class="cm"># Edge</span>
+Write-Host <span class="cs">"`n--- EDGE ---"</span> -ForegroundColor Yellow
+try {
+    <span class="cv">$ev</span> = (Get-Item <span class="cs">"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"</span> -ErrorAction Stop).VersionInfo.FileVersion
+    Write-Host <span class="cs">"  Version: $ev"</span> -ForegroundColor Green
+    Write-Host <span class="cs">"  [PASS] Edge is installed and updated"</span> -ForegroundColor Green; <span class="cv">$pass</span>++
+} catch {
+    Write-Host <span class="cs">"  [FAIL] Edge not found!"</span> -ForegroundColor Red; <span class="cv">$fail</span>++
+}
+
+<span class="cm"># Defender</span>
+Write-Host <span class="cs">"`n--- DEFENDER ---"</span> -ForegroundColor Yellow
+try {
+    <span class="cv">$def</span> = Get-MpComputerStatus -ErrorAction Stop
+    Write-Host <span class="cs">"  Signature Version: $($def.AntivirusSignatureVersion)"</span>
+    Write-Host <span class="cs">"  Last Updated: $($def.AntivirusSignatureLastUpdated)"</span>
+    Write-Host <span class="cs">"  Engine: $($def.AMEngineVersion)"</span>
+    if (<span class="cv">$def</span>.AntivirusSignatureAge -le 7) {
+        Write-Host <span class="cs">"  [PASS] Defender signatures are current ($($def.AntivirusSignatureAge) days old)"</span> -ForegroundColor Green; <span class="cv">$pass</span>++
+    } else {
+        Write-Host <span class="cs">"  [WARN] Defender signatures are $($def.AntivirusSignatureAge) days old"</span> -ForegroundColor Yellow; <span class="cv">$pass</span>++
+    }
+} catch {
+    Write-Host <span class="cs">"  [FAIL] Cannot read Defender status!"</span> -ForegroundColor Red; <span class="cv">$fail</span>++
+}
+
+<span class="cm"># Windows KB — check latest hotfix</span>
+Write-Host <span class="cs">"`n--- WINDOWS KB ---"</span> -ForegroundColor Yellow
+<span class="cv">$hotfixes</span> = Get-HotFix | Sort-Object InstalledOn -Descending
+<span class="cv">$latest</span> = <span class="cv">$hotfixes</span> | Select-Object -First 1
+<span class="cv">$thisMonth</span> = Get-Date -Format <span class="cs">"yyyy-MM"</span>
+if (<span class="cv">$latest</span> -and <span class="cv">$latest</span>.InstalledOn -and <span class="cv">$latest</span>.InstalledOn.ToString(<span class="cs">"yyyy-MM"</span>) -eq <span class="cv">$thisMonth</span>) {
+    Write-Host <span class="cs">"  Latest KB: $($latest.HotFixID) installed $($latest.InstalledOn)"</span> -ForegroundColor Green
+    Write-Host <span class="cs">"  [PASS] Current month KB is installed"</span> -ForegroundColor Green; <span class="cv">$pass</span>++
+} else {
+    Write-Host <span class="cs">"  Latest KB: $($latest.HotFixID) installed $($latest.InstalledOn)"</span> -ForegroundColor Yellow
+    Write-Host <span class="cs">"  [WARN] KB may need reboot to register — check after reboot"</span> -ForegroundColor Yellow; <span class="cv">$pass</span>++
+}
+
+Write-Host <span class="cs">"`n--- LAST 10 HOTFIXES ---"</span> -ForegroundColor Yellow
+<span class="cv">$hotfixes</span> | Select-Object -First 10 HotFixID, Description, InstalledOn | Format-Table -AutoSize
+
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"  RESULT: $pass PASSED / $fail FAILED"</span> -ForegroundColor $(if(<span class="cv">$fail</span> -eq 0){<span class="cs">"Green"</span>}else{<span class="cs">"Red"</span>})
+Write-Host <span class="cs">"  Server: $env:COMPUTERNAME | Date: $(Get-Date)"</span> -ForegroundColor White
+Write-Host <span class="cs">"================================================"</span> -ForegroundColor Cyan</div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 7: REBOOT + RDP FIX ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-red">STEP 7</span>
+    <span class="where-tag wt-server">CLIENT SERVER</span>
+    <div class="sec-title">Reboot + Post-Reboot RDP Fix + Re-Verify</div>
+  </div>
+  <div class="body">
+    <div class="al r">TELL SAP TEAM AND MANAGER BEFORE REBOOTING! Only during approved maintenance window.</div>
+
+    <div class="sl r">Step A — Fix RDP registry BEFORE reboot (prevents black screen):</div>
+    <div class="cb" id="s7a"><button class="btn" onclick="cp('s7a',this)">COPY</button><span class="cm"># Fix RDP — prevent black screen after reboot</span>
+reg add <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v InitialProgram /t REG_SZ /d <span class="cs">""</span> /f
+reg add <span class="cs">"HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"</span> /v fInheritInitialProgram /t REG_DWORD /d 0 /f
+reg add <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Shell /t REG_SZ /d <span class="cs">"explorer.exe"</span> /f
+reg add <span class="cs">"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"</span> /v Userinit /t REG_SZ /d <span class="cs">"C:\Windows\system32\userinit.exe,"</span> /f
+net stop <span class="cs">"Remote Desktop Services"</span>
+net start <span class="cs">"Remote Desktop Services"</span>
+Write-Host <span class="cs">"RDP fix applied. Safe to reboot."</span> -ForegroundColor Green</div>
+
+    <div class="sl r">Step B — Reboot:</div>
+    <div class="cb" id="s7b"><button class="btn" onclick="cp('s7b',this)">COPY</button>Restart-Computer -Force</div>
+
+    <div class="sl g">Step C — After reboot, reconnect via RDP and run verification again:</div>
+    <div class="cb" id="s7c"><button class="btn" onclick="cp('s7c',this)">COPY</button><span class="cm"># Post-reboot quick check</span>
+Write-Host <span class="cs">"SERVER: $env:COMPUTERNAME — POST-REBOOT CHECK"</span> -ForegroundColor Cyan
+Write-Host <span class="cs">"Uptime: $((Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime)"</span>
+Write-Host <span class="cs">"`nChrome:"</span> -ForegroundColor Yellow
+(Get-Item <span class="cs">"C:\Program Files\Google\Chrome\Application\chrome.exe"</span>).VersionInfo.FileVersion
+Write-Host <span class="cs">"Edge:"</span> -ForegroundColor Yellow
+(Get-Item <span class="cs">"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"</span>).VersionInfo.FileVersion
+Write-Host <span class="cs">"Defender:"</span> -ForegroundColor Yellow
+Get-MpComputerStatus | Select-Object AntivirusSignatureLastUpdated, AntivirusSignatureVersion
+Write-Host <span class="cs">"Latest KB:"</span> -ForegroundColor Yellow
+Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 3 HotFixID, InstalledOn
+Write-Host <span class="cs">"RDP Service:"</span> -ForegroundColor Yellow
+Get-Service TermService | Select-Object Name, Status
+Write-Host <span class="cs">"`nALL GOOD — Take screenshot for records"</span> -ForegroundColor Green</div>
+  </div>
+</div>
+
+<!-- ======================= SECTION 8: QUICK REFERENCE ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-green">REF</span>
+    <div class="sec-title">Quick Reference — All Paths &amp; Settings</div>
+  </div>
+  <div class="body">
+    <table>
+      <tr><th>Item</th><th>Value</th></tr>
+      <tr><td>Patch download folder (local laptop)</td><td><code>C:\Temp\Patches\<span class="mval">apr-2026</span>\</code></td></tr>
+      <tr><td>WinSCP / SecureFX SFTP host</td><td><code>sftp-inbound.sms.il5.sapns2.internal</code></td></tr>
+      <tr><td>SFTP username</td><td><code>c5406751</code></td></tr>
+      <tr><td>SFTP remote path</td><td><code>/vnosc-il5-artifacts-to-scan/s4pce/C5406751/<span class="mval">apr-2026</span>/</code></td></tr>
+      <tr><td>Jumphost patch folder</td><td><code>C:\Users\c5406751\<span class="mval">apr-2026</span>\</code></td></tr>
+      <tr><td>S3 Bucket — Support001 (PCE)</td><td><code>ns2-il5-s4-support0001-sc-ssm-patching</code></td></tr>
+      <tr><td>S3 Path — Support001</td><td><code>windows_patch/<span class="mval">apr-2026</span>/</code> &#8592; WITH date folder</td></tr>
+      <tr><td>S3 Bucket — Support002 (Sidecar)</td><td><code>ns2-il5-s4-support0002-sc-ssm-patching</code></td></tr>
+      <tr><td>S3 Path — Support002</td><td><code>patches/windows_patch/</code> &#8592; NO date folder EVER</td></tr>
+      <tr><td>KB name in S3</td><td><code>kb-<span class="mval">apr-2026</span>.msu</code></td></tr>
+      <tr><td>Client server patch folder</td><td><code>C:\Temp\Patches\<span class="mval">apr-2026</span>\</code></td></tr>
+      <tr><td>AWS Region</td><td><code>us-gov-west-1</code></td></tr>
+    </table>
+
+    <hr>
+
+    <div class="sl y">4 Files Every Month:</div>
+    <table>
+      <tr><th>File</th><th>Source</th><th>~Size</th></tr>
+      <tr><td>GoogleChromeStandaloneEnterprise64.msi</td><td>dl.google.com (always latest)</td><td>~147 MB</td></tr>
+      <tr><td>MicrosoftEdgeEnterpriseX64.msi</td><td>msedge.sf.dl.delivery.mp.microsoft.com (always latest)</td><td>~197 MB</td></tr>
+      <tr><td>mpam-fe.exe</td><td>go.microsoft.com redirect (latest Defender sigs)</td><td>~209 MB</td></tr>
+      <tr><td>kb-<span class="mval">apr-2026</span>.msu</td><td>Microsoft Update Catalog (current month CU for Server 2019)</td><td>~800 MB</td></tr>
+    </table>
+
+    <hr>
+
+    <div class="sl r">Common Errors &amp; Fixes:</div>
+    <table>
+      <tr><th>Problem</th><th>Fix</th></tr>
+      <tr><td>KB download Access Denied on server</td><td>KB must be renamed to <code>kb-<span class="mval">apr-2026</span>.msu</code> in S3 — check the name</td></tr>
+      <tr><td>Import-Module AWSPowerShell hangs</td><td>Put <strong>#</strong> in front: <code># Import-Module AWSPowerShell</code></td></tr>
+      <tr><td>Wrong server — prompt shows c5406751</td><td>That's the JUMPHOST. Client server shows <code>Administrator</code></td></tr>
+      <tr><td>Chrome/Edge date shows old date after update</td><td>Normal — date doesn't change. VERSION NUMBER is the proof</td></tr>
+      <tr><td>F5 does nothing in SecureFX</td><td>Right-click &#8594; Download — F5 does NOT work in SecureFX</td></tr>
+      <tr><td>WinSCP .filepart error</td><td>Click Skip All — files ARE uploaded. Disable Resume in Transfer Settings</td></tr>
+      <tr><td>KB shows .msu.msu in S3 after rename</td><td>Type ONLY <code>kb-<span class="mval">apr-2026</span></code> with NO extension — S3 keeps the .msu</td></tr>
+      <tr><td>Large file download seems stuck</td><td>Normal — big files transfer silently. Wait 15 min. Don't press anything</td></tr>
+      <tr><td>Support002 has a date folder in S3</td><td>WRONG! Support002 NEVER gets date folder — <code>patches/windows_patch/</code> only</td></tr>
+      <tr><td>Clipboard not working in RDP</td><td>Disconnect and reconnect RDP — clipboard resets</td></tr>
+      <tr><td>Black screen after reboot</td><td>Run the RDP fix in Step 7A BEFORE rebooting</td></tr>
+      <tr><td>Auto-download script can't find KB</td><td>Go to catalog.update.microsoft.com manually, search, download .msu, rename</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ======================= MONTHLY CHECKLIST ======================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="step-num sn-green">&#10003;</span>
+    <div class="sec-title">Monthly Checklist — Click to Mark Done</div>
+  </div>
+  <div class="body">
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 1]</strong> Auto-download script ran — 4 files in C:\Temp\Patches\<span class="mval">apr-2026</span>\</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 1]</strong> KB file is named kb-<span class="mval">apr-2026</span>.msu (current month, NOT old)</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 2]</strong> WinSCP — all 4 files uploaded to IL5 SFTP /vnosc-il5-artifacts/.../C5406751/<span class="mval">apr-2026</span>/</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 3]</strong> SecureFX — all 4 files downloaded to jumphost C:\Users\c5406751\<span class="mval">apr-2026</span>\</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 4]</strong> S3 Support001 — uploaded to windows_patch/<span class="mval">apr-2026</span>/ (WITH date folder)</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 4]</strong> S3 Support002 — uploaded to patches/windows_patch/ (NO date folder)</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 4]</strong> KB renamed to kb-<span class="mval">apr-2026</span>.msu in BOTH S3 buckets</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 5]</strong> Script A run on Support002 Sidecar — "ALL PATCHES INSTALLED" shown</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 5]</strong> Script B run on Support001 PCE — "ALL PATCHES INSTALLED" shown</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 6]</strong> Verification script — all 4 components PASS on both servers</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 7]</strong> RDP fix applied on both servers</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 7]</strong> Both servers rebooted (SAP team notified)</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[STEP 7]</strong> Post-reboot verification — RDP works, services running</span></div>
+    <div class="check-item"><div class="chk" onclick="this.classList.toggle('done')"></div><span class="chk-label"><strong>[DONE]</strong> Screenshot taken, change ticket updated and closed</span></div>
+  </div>
+</div>
+
+<!-- ======================= FOOTER ======================= -->
+<div class="footer">
+  SAP NS2 IL5 Master Patching Guide &middot; <span class="mval-full">April 2026</span> &middot; <span style="color:var(--red);font-weight:bold;">CONFIDENTIAL</span><br>
+  PCE &amp; Sidecar Servers &middot; Air-Gapped DoD Environment &middot; us-gov-west-1
+</div>
+
+<!-- ======================= JAVASCRIPT ======================= -->
+<script>
+// Copy button
+function cp(id, btn) {
+  var el = document.getElementById(id);
+  // Get text content, strip the COPY button text and HTML tags
+  var clone = el.cloneNode(true);
+  var btns = clone.querySelectorAll('.btn');
+  btns.forEach(function(b){ b.remove(); });
+  var text = clone.textContent.trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = 'COPIED!';
+    btn.classList.add('ok');
+    setTimeout(function(){ btn.textContent = orig; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+// Tab switching
+function switchTab(tab, id) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Month update — changes ALL references across the entire page
+function updateMonth() {
+  var monthNames = {jan:'January',feb:'February',mar:'March',apr:'April',may:'May',jun:'June',jul:'July',aug:'August',sep:'September',oct:'October',nov:'November',dec:'December'};
+  var monthNums = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+
+  var m = document.getElementById('monthSelect').value;
+  var y = document.getElementById('yearInput').value;
+  var shortMonth = m + '-' + y;
+  var fullMonth = monthNames[m] + ' ' + y;
+  var monthNum = monthNums[m];
+  var searchMonth = y + '-' + monthNum;
+
+  // Update display
+  document.getElementById('monthDisplay').textContent = shortMonth;
+
+  // Update all month values
+  document.querySelectorAll('.mval').forEach(function(el){ el.textContent = shortMonth; });
+  document.querySelectorAll('.mval-full').forEach(function(el){ el.textContent = fullMonth; });
+  document.querySelectorAll('.mval-num').forEach(function(el){ el.textContent = monthNum; });
+  document.querySelectorAll('.mval-year').forEach(function(el){ el.textContent = y; });
+  document.querySelectorAll('.mval-search').forEach(function(el){ el.textContent = searchMonth; });
+
+  // Flash confirmation
+  var display = document.getElementById('monthDisplay');
+  display.style.background = 'var(--green)';
+  display.style.color = '#000';
+  setTimeout(function(){
+    display.style.background = '#000';
+    display.style.color = 'var(--yellow)';
+  }, 1000);
+}
+</script>
+</body>
+</html>
