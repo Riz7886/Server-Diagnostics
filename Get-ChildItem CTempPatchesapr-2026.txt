@@ -1,0 +1,60 @@
+Get-ChildItem C:\Temp\Patches\apr-2026 -Force
+Get-ChildItem C:\Temp\diag -Force -ErrorAction SilentlyContinue
+
+---------------------------------------------------------------------------------------
+
+# ============================================================
+# IL5 PATCH - DOWNLOAD ONLY - SAFE TO RE-RUN
+# Does NOT delete anything. Skips files that already exist.
+# ============================================================
+$ErrorActionPreference = 'Stop'
+
+$bucket      = "ns2-il5-s4-support0001-sc-ssm-patching"
+$region      = "us-gov-west-1"
+$s3Prefix    = "windows_patch/april-2026"
+$localFolder = "C:\Temp\Patches\apr-2026"
+
+$patches = @(
+    [pscustomobject]@{ Name="Chrome";    S3Key="$s3Prefix/GoogleChromeStandaloneEnterprise64.msi"; Local="$localFolder\chrome.msi";   ExpectedMB=141 }
+    [pscustomobject]@{ Name="Edge";      S3Key="$s3Prefix/MicrosoftEdgeEnterpriseX64.msi";         Local="$localFolder\edge.msi";     ExpectedMB=187 }
+    [pscustomobject]@{ Name="Defender";  S3Key="$s3Prefix/mpam-fe.exe";                            Local="$localFolder\mpam-fe.exe";  ExpectedMB=198 }
+    [pscustomobject]@{ Name="WindowsKB"; S3Key="$s3Prefix/kb-apr-2026.msu";                        Local="$localFolder\kb.msu";       ExpectedMB=89  }
+)
+
+# Create folder if missing - DO NOT WIPE
+if (-not (Test-Path $localFolder)) {
+    New-Item -ItemType Directory -Path $localFolder -Force | Out-Null
+}
+Write-Host "Target folder: $localFolder" -ForegroundColor Green
+
+$i = 0
+foreach ($p in $patches) {
+    $i++
+    Write-Host ""
+    Write-Host "[$i/$($patches.Count)] $($p.Name)" -ForegroundColor Yellow
+
+    # Skip if already downloaded with reasonable size
+    if (Test-Path $p.Local) {
+        $existing = [math]::Round((Get-Item $p.Local).Length / 1MB, 1)
+        if ($existing -ge ($p.ExpectedMB - 5)) {
+            Write-Host "  SKIP - already exists ($existing MB)" -ForegroundColor Cyan
+            continue
+        }
+        Write-Host "  Found partial file ($existing MB), re-downloading..." -ForegroundColor Yellow
+    }
+
+    Write-Host "  Downloading from s3://$bucket/$($p.S3Key)"
+    & aws s3 cp "s3://$bucket/$($p.S3Key)" "$($p.Local)" --region $region
+
+    if ($LASTEXITCODE -ne 0) { throw "aws s3 cp failed (exit $LASTEXITCODE) for $($p.Name)" }
+    if (-not (Test-Path $p.Local)) { throw "FAIL: $($p.Name) not created" }
+
+    $sz = [math]::Round((Get-Item $p.Local).Length / 1MB, 1)
+    Write-Host "  OK - $sz MB" -ForegroundColor Green
+}
+
+Write-Host ""
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "DOWNLOAD COMPLETE - verify before installing" -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Cyan
+Get-ChildItem $localFolder | Format-Table Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}, LastWriteTime
