@@ -1,0 +1,59 @@
+# ================================================
+# IL5 PATCH - APRIL 2026 - SUPPORT001 PCE
+# ================================================
+$ErrorActionPreference = 'Stop'
+Import-Module AWSPowerShell
+
+$bucket = "ns2-il5-s4-support0001-sc-ssm-patching"
+$region = "us-gov-west-1"
+$dest   = "C:\Temp\Patches\apr-2026"
+
+if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest -Force | Out-Null }
+Write-Host "Folder: $dest" -ForegroundColor Green
+
+# Quick access check - if this fails it's a permissions problem, not the script
+Write-Host "`nChecking S3 access..." -ForegroundColor Yellow
+$check = Get-S3ObjectMetadata -BucketName $bucket -Key "windows_patch/april-2026/kb-apr-2026.msu" -Region $region
+Write-Host "  S3 access OK - kb file is $([math]::Round($check.ContentLength/1MB,1)) MB" -ForegroundColor Green
+
+Write-Host "`n[1/4] Chrome - downloading 141 MB (1-3 min, no progress bar)..." -ForegroundColor Yellow
+Read-S3Object -BucketName $bucket -Key "windows_patch/april-2026/GoogleChromeStandaloneEnterprise64.msi" -File "$dest\chrome.msi" -Region $region | Out-Null
+Write-Host "  Got $([math]::Round((Get-Item "$dest\chrome.msi").Length/1MB,1)) MB" -ForegroundColor Green
+
+Write-Host "`n[2/4] Edge - downloading 187 MB..." -ForegroundColor Yellow
+Read-S3Object -BucketName $bucket -Key "windows_patch/april-2026/MicrosoftEdgeEnterpriseX64.msi" -File "$dest\edge.msi" -Region $region | Out-Null
+Write-Host "  Got $([math]::Round((Get-Item "$dest\edge.msi").Length/1MB,1)) MB" -ForegroundColor Green
+
+Write-Host "`n[3/4] Defender - downloading 198 MB..." -ForegroundColor Yellow
+Read-S3Object -BucketName $bucket -Key "windows_patch/april-2026/mpam-fe.exe" -File "$dest\defender.exe" -Region $region | Out-Null
+Write-Host "  Got $([math]::Round((Get-Item "$dest\defender.exe").Length/1MB,1)) MB" -ForegroundColor Green
+
+Write-Host "`n[4/4] KB - downloading 89 MB..." -ForegroundColor Yellow
+Read-S3Object -BucketName $bucket -Key "windows_patch/april-2026/kb-apr-2026.msu" -File "$dest\kb.msu" -Region $region | Out-Null
+Write-Host "  Got $([math]::Round((Get-Item "$dest\kb.msu").Length/1MB,1)) MB" -ForegroundColor Green
+
+Write-Host "`n=== ALL 4 DOWNLOADED ===" -ForegroundColor Cyan
+Get-ChildItem $dest | Format-Table Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+
+# ============== INSTALL ==============
+Write-Host "`n=== INSTALLING ===" -ForegroundColor Cyan
+
+Write-Host "`nInstalling Chrome..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList '/i "C:\Temp\Patches\apr-2026\chrome.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus' -Wait
+Write-Host "  done" -ForegroundColor Green
+
+Write-Host "`nInstalling Edge..." -ForegroundColor Yellow
+Start-Process "msiexec.exe" -ArgumentList '/i "C:\Temp\Patches\apr-2026\edge.msi" /quiet /norestart REINSTALL=ALL REINSTALLMODE=vomus' -Wait
+Write-Host "  done" -ForegroundColor Green
+
+Write-Host "`nInstalling Defender..." -ForegroundColor Yellow
+Start-Process -FilePath "C:\Temp\Patches\apr-2026\defender.exe" -Wait
+Write-Host "  done" -ForegroundColor Green
+
+Write-Host "`nInstalling Windows KB..." -ForegroundColor Yellow
+Start-Process "wusa.exe" -ArgumentList "C:\Temp\Patches\apr-2026\kb.msu /quiet /norestart" -Wait
+Write-Host "  done" -ForegroundColor Green
+
+Write-Host "`n================================================" -ForegroundColor Cyan
+Write-Host "ALL PATCHES INSTALLED - SUPPORT001 PCE" -ForegroundColor Green
+Write-Host "================================================" -ForegroundColor Cyan
