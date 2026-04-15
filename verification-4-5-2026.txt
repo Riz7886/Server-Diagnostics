@@ -1,0 +1,13 @@
+$c = Get-Item "C:\Program Files\Google\Chrome\Application\chrome.exe"
+Write-Host "Version:  $($c.VersionInfo.FileVersion)"
+Write-Host "Modified: $($c.LastWriteTime)"
+
+-------------------------------------------------------------------------------
+$e = Get-Item "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -EA SilentlyContinue
+if (-not $e) { $e = Get-Item "C:\Program Files\Microsoft\Edge\Application\msedge.exe" }
+Write-Host "Version:  $($e.VersionInfo.FileVersion)"
+Write-Host "Modified: $($e.LastWriteTime)"
+
+----------------------------------------------------------------------------------------------
+
+Get-MpComputerStatus | Select AMEngineVersion, AntivirusSignatureLastUpdated
