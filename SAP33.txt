@@ -1,0 +1,6 @@
+$c = Get-Credential -Message "Creds for \\10.168.0.32\e$ (CRE domain account)"
+cmd /c "net use Z: \\10.168.0.32\e$ $($c.GetNetworkCredential().Password) /user:$($c.UserName)"
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Desktop\otacc-logs" -Force | Out-Null
+robocopy "Z:\OTC\OpenText\Core Archive Connector\logs" "$env:USERPROFILE\Desktop\otacc-logs" /E /B /R:1 /W:1 /MT:8 /NP
+net use Z: /delete /y
+explorer "$env:USERPROFILE\Desktop\otacc-logs"
