@@ -1,0 +1,137 @@
+================================================================
+  OpenText Core Archive Connector — Log Pull Cheat Sheet
+  Target:  \\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\logs
+  From:    Your IL5 jump server (S4_Priv_Jumphost)
+  To:      %USERPROFILE%\Desktop\otacc-logs
+================================================================
+
+TIP: Open this file in NOTEPAD (not Word). Word auto-corrects
+     straight quotes into smart quotes and breaks the PowerShell
+     commands when you paste.
+
+
+----------------------------------------------------------------
+STEP 0 — IF COPY-PASTE IS BROKEN IN THE RDP SESSION
+----------------------------------------------------------------
+On the jump server, open CMD and run:
+
+taskkill /F /IM rdpclip.exe & start rdpclip.exe
+
+That restarts the RDP clipboard bridge. 9 out of 10 paste
+problems fix immediately.
+
+
+----------------------------------------------------------------
+STEP 1 — TEST CONNECTIVITY (5 SECONDS)
+----------------------------------------------------------------
+Open PowerShell on the jump server and run:
+
+Test-NetConnection 10.168.0.32 -Port 445
+
+  TcpTestSucceeded : True   -> SMB open, go to STEP 2.
+  TcpTestSucceeded : False  -> SMB blocked cross-enclave, go to
+                               FALLBACKS at the bottom.
+
+
+----------------------------------------------------------------
+STEP 2 — MAIN SCRIPT (MAP DRIVE + COPY + CLEAN UP)
+----------------------------------------------------------------
+Paste this whole block into POWERSHELL (not CMD):
+
+$c = Get-Credential -Message "Creds for \\10.168.0.32\e$ (CRE domain account)"
+cmd /c "net use Z: \\10.168.0.32\e$ $($c.GetNetworkCredential().Password) /user:$($c.UserName)"
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Desktop\otacc-logs" -Force | Out-Null
+robocopy "Z:\OTC\OpenText\Core Archive Connector\logs" "$env:USERPROFILE\Desktop\otacc-logs" /E /R:1 /W:1 /MT:8 /NP
+net use Z: /delete /y
+explorer "$env:USERPROFILE\Desktop\otacc-logs"
+
+NOTE — /B flag removed on purpose. It needs the
+"Backup and Restore Files" user right on the jump server
+(which your account does NOT have). Without /B, Java/log4j
+lets robocopy read the active files anyway because they're
+opened with shared-read.
+
+
+----------------------------------------------------------------
+STEP 3 — VERIFY YOU ACTUALLY GOT THE LOGS
+----------------------------------------------------------------
+Get-ChildItem "$env:USERPROFILE\Desktop\otacc-logs" -Recurse | Format-Table Name, Length, LastWriteTime
+
+You SHOULD see:
+  otacc          ~ 4 MB   (the current OTACC log — the important one)
+  http_access    ~ 8 MB   (current HTTP log — the other important one)
+  otacc-stderr.2026-xx-xx       1 KB (rotated, empty by design)
+  otacc-stdout.2026-xx-xx       1 KB (rotated, empty by design)
+  commons-daemon.2026-xx-xx     1 KB (rotated, empty by design)
+
+If you only got the 1 KB files -> the live otacc and
+http_access didn't copy. Go to STEP 4.
+
+
+----------------------------------------------------------------
+STEP 4 — IF THE 4 MB / 8 MB LIVE FILES ARE MISSING
+----------------------------------------------------------------
+Option A — VSS snapshot on the target (run on 10.168.0.32 as admin):
+
+wmic shadowcopy call create Volume='E:\'
+vssadmin list shadows /for=E:
+
+Then copy from the shadow-copy path (shown in the vssadmin output)
+instead of the live path.
+
+Option B — PowerShell remoting via WinRM (Copy-Item -FromSession
+bypasses the live-file issue entirely):
+
+$s = New-PSSession -ComputerName 10.168.0.32 -Credential (Get-Credential)
+Copy-Item -FromSession $s "E:\OTC\OpenText\Core Archive Connector\logs" "$env:USERPROFILE\Desktop\otacc-logs" -Recurse -Force
+Remove-PSSession $s
+
+
+----------------------------------------------------------------
+FALLBACKS — IF STEP 1 SHOWED SMB IS BLOCKED (error 53)
+----------------------------------------------------------------
+
+A) ASK RHONDA TO PUSH THE LOGS
+   She is already on a CRE-side jump server. On her PowerShell:
+
+Copy-Item "E:\OTC\OpenText\Core Archive Connector\logs\*" "\\<shared-path-you-both-reach>\" -Recurse -Force
+
+   Then YOU pull from that shared path.
+
+
+B) TRY WINRM INSTEAD (often open when SMB is not)
+
+Test-NetConnection 10.168.0.32 -Port 5985
+
+   If True, use Option B in STEP 4 above.
+
+
+C) RDP DIRECTLY INTO 10.168.0.32 if your creds allow it,
+   zip the logs folder, then use the SAP-approved cross-enclave
+   file-transfer tool.
+
+
+----------------------------------------------------------------
+COMMON ERRORS — WHAT THEY MEAN
+----------------------------------------------------------------
+System error 53                -> SMB is unreachable. Run STEP 1 again.
+System error 1219              -> A stale mount is blocking a new one.
+                                  Fix: net use * /delete /y
+/B "Backup and Restore"        -> Drop the /B flag (STEP 2 already does).
+robocopy exit code 8 or higher -> Real failure. Check per-file output.
+robocopy exit code 1..7        -> Success (1=copied, 2=extras, 3=both).
+The network connection could
+   not be found  (net use /delete) -> The mount never existed, harmless.
+
+
+----------------------------------------------------------------
+ONE-LINE QUICK RERUN (AFTER FIRST SUCCESSFUL RUN)
+----------------------------------------------------------------
+If the mount is already up (Z: exists) and you only need to
+re-pull the logs:
+
+robocopy "Z:\OTC\OpenText\Core Archive Connector\logs" "$env:USERPROFILE\Desktop\otacc-logs" /E /R:1 /W:1 /MT:8 /NP
+
+================================================================
+  End of cheat sheet — last updated 2026-04-22
+================================================================
