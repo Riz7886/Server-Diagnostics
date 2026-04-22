@@ -1,0 +1,14 @@
+---BEGIN---
+$c = Get-Credential -Message "CRE domain creds for 10.168.0.32"
+$s = New-PSSession -ComputerName 10.168.0.32 -Credential $c
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Desktop\otacc-logs" -Force | Out-Null
+Copy-Item -FromSession $s "E:\OTC\OpenText\Core Archive Connector\logs\*" "$env:USERPROFILE\Desktop\otacc-logs\" -Recurse -Force
+Remove-PSSession $s
+explorer "$env:USERPROFILE\Desktop\otacc-logs"
+---END---
+
+
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "10.168.0.32" -Force -Concatenate
+
+
+C:\Users\PC\Downloads\SAP-scripts\OTACC-Log-Pull-CHEATSHEET.txt
