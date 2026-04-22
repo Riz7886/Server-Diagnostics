@@ -1,0 +1,12 @@
+$c = Get-Credential -Message "CRE creds for 10.168.0.32"
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "10.168.0.32" -Force -Concatenate
+Write-Host ">>> Opening WinRM session..." -ForegroundColor Cyan
+$s = New-PSSession -ComputerName 10.168.0.32 -Credential $c -ErrorAction Stop
+Write-Host ">>> Session OK. Listing REMOTE logs folder:" -ForegroundColor Green
+Invoke-Command -Session $s -ScriptBlock { Get-ChildItem "E:\OTC\OpenText\Core Archive Connector\logs" | Select Name, @{n="MB";e={[math]::Round($_.Length/1MB,2)}}, LastWriteTime } | Format-Table
+Write-Host ">>> Copying..." -ForegroundColor Cyan
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Desktop\otacc-logs" -Force | Out-Null
+Copy-Item -FromSession $s "E:\OTC\OpenText\Core Archive Connector\logs\*" "$env:USERPROFILE\Desktop\otacc-logs\" -Recurse -Force
+Remove-PSSession $s
+Write-Host ">>> LOCAL folder now contains:" -ForegroundColor Green
+Get-ChildItem "$env:USERPROFILE\Desktop\otacc-logs" | Format-Table Name, Length, LastWriteTime
