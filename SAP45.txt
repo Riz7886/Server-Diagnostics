@@ -1,0 +1,34 @@
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "10.168.0.32" -Force -Concatenate
+Write-Host "TrustedHosts now contains:" -ForegroundColor Cyan
+(Get-Item WSMan:\localhost\Client\TrustedHosts).Value
+$c = Get-Credential -Message "CRE creds for 10.168.0.32 (e.g. CRE\c5406751)"
+Write-Host ">>> Opening WinRM session..." -ForegroundColor Cyan
+$s = New-PSSession -ComputerName 10.168.0.32 -Credential $c -Authentication Negotiate -ErrorAction Stop
+Write-Host ">>> Session OK (Id $($s.Id))" -ForegroundColor Green
+Invoke-Command -Session $s -ScriptBlock { Get-ChildItem "E:\OTC\OpenText\Core Archive Connector\logs" | Select Name, Length, LastWriteTime } | Format-Table
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Desktop\otacc-logs" -Force | Out-Null
+Copy-Item -FromSession $s "E:\OTC\OpenText\Core Archive Connector\logs\*" "$env:USERPROFILE\Desktop\otacc-logs\" -Recurse -Force
+Remove-PSSession $s
+Get-ChildItem "$env:USERPROFILE\Desktop\otacc-logs" | Format-Table Name, Length, LastWriteTime
+
+-----------------------------------------------------------------------------
+$s = New-PSSession -ComputerName 10.168.0.32 -Credential $c -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck -SkipCNCheck) -ErrorAction Stop
+
+-----------------------------------------------------------------------------------------
+$s = New-PSSession -ComputerName c006app01otd.pce.s4.cre.sapns2.internal -Credential $c -ErrorAction Stop
+
+---------------------------------------------------------------------------------------------------------
+
+Set-Item WSMan:\localhost\Client\TrustedHosts * -Force
+$c = Get-Credential
+$s = New-PSSession 10.168.0.32 -Credential $c -Authentication Negotiate
+New-Item "$env:USERPROFILE\Desktop\otacc-logs" -ItemType Directory -Force | Out-Null
+Copy-Item -FromSession $s "E:\OTC\OpenText\Core Archive Connector\logs\*" "$env:USERPROFILE\Desktop\otacc-logs\" -Recurse -Force
+Remove-PSSession $s
+explorer "$env:USERPROFILE\Desktop\otacc-logs"
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+$s = New-PSSession c006app01otd.pce.s4.cre.sapns2.internal -Credential $c
+
