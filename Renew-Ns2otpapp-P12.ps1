@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory=$true,Position=0)][ValidateSet('GenerateCsr','ImportSignedCert','Verify','Rollback')][string]$Phase,
     [string]$Target = '10.168.0.32',
-    [string[]]$FallbackTargets = @('ns2otpapp','10.168.2.22','ns2otpapp.sap.parker.corp'),
+    [string[]]$FallbackTargets = @(),
     [pscredential]$Credential,
     [string]$KeystorePath = 'E:\CERTS\s4pceotcac.p12',
     [string]$NewKeystorePath = 'E:\CERTS\s4pceotcac_new.p12',
