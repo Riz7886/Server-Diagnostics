@@ -1,0 +1,1 @@
+cd C:\temp\script; .\RENEW.ps1 Import -SignedCert C:\temp\script\opt..cer ; if ($LASTEXITCODE -eq 0) { Invoke-Command -ComputerName 10.168.0.32 -ScriptBlock { Restart-Service 'OpenText Core Archive Connector'; Get-Service 'OpenText Core Archive Connector' } }
