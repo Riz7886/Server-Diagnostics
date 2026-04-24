@@ -1,1 +1,1 @@
-.\renew-prod.ps1 -SignedCert C:\temp\script\opt.cer -Password 's4hpce' -TargetShare 'e$\OTC\OpenText\Core Archive Connector\java\bin'
+.\renew-prod.ps1 -SignedCert "C:\temp\script\otp (2).cer" -Password 's4hpce' -TargetShare 'e$\OTC\OpenText\Core Archive Connector\java\bin'
