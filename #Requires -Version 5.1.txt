@@ -1,0 +1,147 @@
+#Requires -Version 5.1
+[CmdletBinding()]
+param(
+    [string]$SignedCert      = 'C:\temp\script\opt..cer',
+    [string]$WorkDir         = 'C:\temp\script\work',
+    [string]$TargetServer    = '10.168.0.32',
+    [string]$TargetShare     = 'e$\CERTS',
+    [string]$ProdKeystore    = 's4pceotcac.p12',
+    [string]$NewKeystoreName = 's4pceotcac_new.p12',
+    [string]$PwFile          = 'pw.xml',
+    [string]$Alias           = 's4hpce',
+    [string]$ServiceName     = 'OpenText Core Archive Connector',
+    [string]$KeytoolPath
+)
+
+$ErrorActionPreference = 'Stop'
+
+function Say  ($m,$c='Cyan')  { Write-Host "[*] $m"   -ForegroundColor $c }
+function Ok   ($m)            { Write-Host "[ok] $m"  -ForegroundColor Green }
+function Warn ($m)            { Write-Host "[!!] $m"  -ForegroundColor Yellow }
+function Die  ($m)            { Write-Host "[xx] $m"  -ForegroundColor Red; exit 1 }
+
+function Find-Keytool {
+    param([string]$Hint)
+    if ($Hint -and (Test-Path $Hint)) { return $Hint }
+    $cmd = Get-Command keytool.exe -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Path }
+    $paths = @(
+        'C:\Program Files\Java\jre*\bin\keytool.exe',
+        'C:\Program Files\Java\jdk*\bin\keytool.exe',
+        'C:\Program Files\Eclipse Adoptium\*\bin\keytool.exe',
+        'C:\Program Files\OpenJDK\*\bin\keytool.exe',
+        'C:\Program Files\Amazon Corretto\*\bin\keytool.exe',
+        'C:\Program Files (x86)\Java\*\bin\keytool.exe',
+        'C:\Java\*\bin\keytool.exe'
+    )
+    foreach ($p in $paths) {
+        $f = Get-ChildItem -Path $p -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($f) { return $f.FullName }
+    }
+    return $null
+}
+
+Say "Preflight"
+if (-not (Test-Path $SignedCert)) { Die "Signed cert not found: $SignedCert" }
+Ok "Signed cert: $SignedCert"
+
+$pwStore       = Join-Path $WorkDir $PwFile
+$keystoreLocal = Join-Path $WorkDir $NewKeystoreName
+if (-not (Test-Path $pwStore))       { Die "pw.xml missing at $pwStore (run Phase 1 Csr first)" }
+if (-not (Test-Path $keystoreLocal)) { Die "Local keystore missing at $keystoreLocal (run Phase 1 Csr first)" }
+Ok "Phase-1 artifacts present."
+
+$kt = Find-Keytool -Hint $KeytoolPath
+if (-not $kt) { Die "keytool.exe not found. Pass -KeytoolPath 'C:\path\to\keytool.exe'." }
+Ok "keytool: $kt"
+
+$remoteShare = "\\$TargetServer\$TargetShare"
+if (-not (Test-Path $remoteShare)) { Die "SMB share not reachable: $remoteShare" }
+Ok "Remote share reachable: $remoteShare"
+
+Say "Import signed cert into local keystore"
+$pw = Import-Clixml -Path $pwStore
+$p1 = [System.Net.NetworkCredential]::new('', $pw).Password
+
+$impArgs = @(
+    '-importcert','-trustcacerts','-noprompt',
+    '-alias',$Alias,
+    '-file',$SignedCert,
+    '-keystore',$keystoreLocal,
+    '-storetype','PKCS12',
+    '-storepass',$p1
+)
+& $kt @impArgs
+if ($LASTEXITCODE -ne 0) { Die "keytool -importcert failed: exit $LASTEXITCODE" }
+Ok "Imported signed cert."
+
+Say "Verify keystore contents"
+& $kt -list -v -alias $Alias -keystore $keystoreLocal -storetype PKCS12 -storepass $p1
+if ($LASTEXITCODE -ne 0) { Die "keytool -list failed after import" }
+
+Say "Back up existing production keystore on target"
+$prodPath   = Join-Path $remoteShare $ProdKeystore
+$stamp      = Get-Date -Format 'yyyyMMddHHmmss'
+$backupPath = Join-Path $remoteShare "$ProdKeystore.bak-$stamp"
+if (Test-Path $prodPath) {
+    Copy-Item $prodPath $backupPath -Force
+    Ok "Prod backup: $backupPath"
+} else {
+    Warn "No existing prod keystore at $prodPath (first-time install?)"
+}
+
+Say "Push new keystore to production"
+Copy-Item $keystoreLocal $prodPath -Force
+Ok "Prod keystore updated: $prodPath"
+
+Say "Restart service on $TargetServer (no RDP)"
+$restarted = $false
+try {
+    $svc = Get-Service -ComputerName $TargetServer -Name $ServiceName -ErrorAction Stop
+    Restart-Service -InputObject $svc -Force -ErrorAction Stop
+    Start-Sleep -Seconds 3
+    $svc = Get-Service -ComputerName $TargetServer -Name $ServiceName
+    Ok "Method 1 (RPC/DCOM) succeeded. Status: $($svc.Status)"
+    $restarted = $true
+} catch {
+    Warn "Method 1 (RPC) failed: $($_.Exception.Message)"
+}
+
+if (-not $restarted) {
+    try {
+        & sc.exe "\\$TargetServer" stop $ServiceName | Out-Host
+        Start-Sleep -Seconds 5
+        & sc.exe "\\$TargetServer" start $ServiceName | Out-Host
+        Start-Sleep -Seconds 3
+        & sc.exe "\\$TargetServer" query $ServiceName | Out-Host
+        Ok "Method 2 (sc.exe) completed."
+        $restarted = $true
+    } catch {
+        Warn "Method 2 (sc.exe) failed: $($_.Exception.Message)"
+    }
+}
+
+if (-not $restarted) {
+    try {
+        $q = "SELECT * FROM Win32_Service WHERE Name='$ServiceName'"
+        Invoke-CimMethod -ComputerName $TargetServer -Query $q -MethodName StopService -ErrorAction Stop | Out-Null
+        Start-Sleep -Seconds 5
+        Invoke-CimMethod -ComputerName $TargetServer -Query $q -MethodName StartService -ErrorAction Stop | Out-Null
+        Start-Sleep -Seconds 3
+        $cim = Get-CimInstance -ComputerName $TargetServer -Query $q
+        Ok "Method 3 (WMI/CIM) succeeded. State: $($cim.State)"
+        $restarted = $true
+    } catch {
+        Warn "Method 3 (WMI) failed: $($_.Exception.Message)"
+    }
+}
+
+if (-not $restarted) {
+    Die "All remote-restart methods failed. Cert is swapped on E drive but service still holds the old cert. Ask SAP admin to restart '$ServiceName' on $TargetServer, or check firewall for RPC (135/445) and WMI rules."
+}
+
+Write-Host ''
+Ok "DONE. Certificate renewed end-to-end on $TargetServer."
+Ok "  Prod keystore : $prodPath"
+Ok "  Backup        : $backupPath"
+Ok "  Service       : $ServiceName restarted"
