@@ -1,0 +1,19 @@
+$cert = 'C:\temp\script\otp (2).cer'
+if (-not (Test-Path -LiteralPath $cert)) { Write-Host "File not found: $cert" -ForegroundColor Red; Get-ChildItem C:\temp\script\*.cer | Select FullName; return }
+Write-Host "Cert: $cert" -ForegroundColor Green
+$kt = (Get-ChildItem 'C:\Program Files\Java\*\bin\keytool.exe','C:\Program Files (x86)\Java\*\bin\keytool.exe','C:\Program Files\OpenJDK\*\bin\keytool.exe','C:\Program Files\Eclipse Adoptium\*\bin\keytool.exe','C:\Program Files\Amazon Corretto\*\bin\keytool.exe','C:\Java\*\bin\keytool.exe','\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\keytool.exe' -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+if (-not $kt) { Write-Host "keytool NOT FOUND" -ForegroundColor Red; return }
+Write-Host "keytool: $kt" -ForegroundColor Green
+& $kt -importcert -trustcacerts -noprompt -alias s4hpce -file $cert -keystore C:\temp\script\s4pceotcac_new.p12 -storetype PKCS12 -storepass s4hpce
+if ($LASTEXITCODE -ne 0) { Write-Host "IMPORT FAILED" -ForegroundColor Red; return }
+Write-Host "Imported" -ForegroundColor Green
+$prod = '\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12'
+if (-not (Test-Path -LiteralPath $prod)) { Write-Host "Remote prod keystore unreachable: $prod" -ForegroundColor Red; return }
+$bak = "$prod.bak-$(Get-Date -Format yyyyMMddHHmmss)"
+Copy-Item -LiteralPath $prod -Destination $bak -Force
+Copy-Item -LiteralPath 'C:\temp\script\s4pceotcac_new.p12' -Destination $prod -Force
+Write-Host "Pushed to prod: $prod" -ForegroundColor Green
+sc.exe \\10.168.0.32 stop 'OpenText Core Archive Connector'
+Start-Sleep 5
+sc.exe \\10.168.0.32 start 'OpenText Core Archive Connector'
+Write-Host "DONE" -ForegroundColor Green
