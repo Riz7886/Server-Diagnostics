@@ -1,8 +1,3 @@
 $kt = (Get-ChildItem 'C:\Program Files\Java\*\bin\keytool.exe' | Select -First 1).FullName
-Copy-Item '\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12' 'C:\temp\script\otc-test.p12' -Force
-& $kt -importcert -trustcacerts -noprompt -alias s4hpce -file 'C:\temp\script\OTP.cer' -keystore 'C:\temp\script\otc-test.p12' -storetype PKCS12 -storepass s4hpce
-
------------------------------------------------------------------
-
-
-powershell -ExecutionPolicy Bypass -File C:\Users\PC\Downloads\SAP-Cert-Manager\SAP-KILLER.ps1
+Copy-Item '\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12' 'C:\temp\script\new-test.p12' -Force
+& $kt -importcert -trustcacerts -noprompt -alias s4hpce -file 'C:\temp\script\OTP.cer' -keystore 'C:\temp\script\new-test.p12' -storetype PKCS12 -storepass s4hpce
