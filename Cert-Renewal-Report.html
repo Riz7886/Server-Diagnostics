@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Certificate Renewal - Root Cause Analysis - ns2otpapp.sap.parker.corp</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1f2937;
+    background: #f3f4f6;
+    margin: 0;
+    padding: 32px 16px;
+  }
+  .doc {
+    max-width: 1040px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 48px 56px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .doc-header {
+    border-bottom: 3px solid #1f2937;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  .doc-header .ribbon {
+    display: inline-block;
+    background: #1f2937;
+    color: #fff;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 4px;
+    color: #111827;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+  .subtitle {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  h2 {
+    font-size: 17px;
+    color: #111827;
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 14px;
+    color: #374151;
+    margin: 22px 0 8px;
+    font-weight: 600;
+  }
+  .status-banner {
+    background: #ecfdf5;
+    border-left: 4px solid #059669;
+    padding: 16px 22px;
+    margin: 0 0 28px;
+    border-radius: 0 4px 4px 0;
+  }
+  .status-banner .label {
+    font-weight: 700;
+    color: #065f46;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .status-banner .value {
+    font-size: 16px;
+    color: #111827;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  th {
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+  }
+  table.kv th { width: 32%; }
+  td code, p code, li code, th code {
+    background: #f3f4f6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Consolas, Monaco, monospace;
+    font-size: 12px;
+    color: #374151;
+  }
+  .timeline {
+    border-left: 2px solid #d1d5db;
+    padding-left: 24px;
+    margin: 10px 0 18px 8px;
+  }
+  .timeline .event {
+    position: relative;
+    padding-bottom: 14px;
+  }
+  .timeline .event::before {
+    content: "";
+    position: absolute;
+    left: -30px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    background: #6b7280;
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+  .timeline .event.blocked::before { background: #dc2626; }
+  .timeline .event.resolved::before { background: #059669; }
+  .timeline .event.investigate::before { background: #d97706; }
+  .timeline .event .hour {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  .timeline .event .t {
+    font-weight: 600;
+    color: #111827;
+    display: inline-block;
+  }
+  .timeline .event .d {
+    color: #4b5563;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  ul, ol { margin: 6px 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .callout {
+    background: #fef3c7;
+    border-left: 4px solid #d97706;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+  }
+  .callout .title {
+    font-weight: 700;
+    color: #78350f;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .callout.red {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+  }
+  .callout.red .title { color: #7f1d1d; }
+  .callout p { margin: 4px 0; color: #374151; }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 16px 0 22px;
+  }
+  .stat {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .stat .k {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .stat .v {
+    font-size: 18px;
+    color: #111827;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .stat .v.sm { font-size: 14px; }
+  .footer {
+    margin-top: 44px;
+    padding-top: 18px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 11px;
+    color: #6b7280;
+    text-align: center;
+  }
+  pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 14px 18px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+    font-family: "SF Mono", Consolas, Monaco, monospace;
+    line-height: 1.55;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag.ok { background: #d1fae5; color: #065f46; }
+  .tag.warn { background: #fef3c7; color: #78350f; }
+  .tag.red { background: #fee2e2; color: #991b1b; }
+  .tag.info { background: #dbeafe; color: #1e40af; }
+  .gap-table td.cost {
+    font-weight: 600;
+    color: #991b1b;
+    white-space: nowrap;
+  }
+  .gap-table td.area {
+    font-weight: 600;
+    color: #111827;
+  }
+  .phase-header {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0 8px;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .phase-header .phase-time {
+    color: #6b7280;
+    font-weight: 500;
+    font-family: "SF Mono", Consolas, Monaco, monospace;
+    font-size: 12px;
+  }
+  p { margin: 8px 0 12px; }
+  blockquote {
+    margin: 12px 0;
+    padding: 10px 18px;
+    border-left: 3px solid #9ca3af;
+    background: #f9fafb;
+    color: #4b5563;
+    font-style: italic;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<div class="doc-header">
+  <div class="ribbon">ROOT CAUSE ANALYSIS / INCIDENT REPORT</div>
+  <h1>Certificate Renewal - ns2otpapp.sap.parker.corp</h1>
+  <div class="subtitle">
+    SAP NS2 OpenText Core Archive Connector &middot;
+    Target host: 10.168.0.32 &middot;
+    Window: 2026-04-23 16:36 - 2026-04-24 03:36 (approx. 11 hours) &middot;
+    Report issued: 2026-04-24
+  </div>
+  <div class="subtitle" style="margin-top:8px;">
+    Prepared by <b style="color:#111827;">Syed Rizvi</b>
+  </div>
+</div>
+
+<div class="status-banner">
+  <div class="label">Final Outcome</div>
+  <div class="value">
+    Renewal completed successfully. Certificate valid through 2027-04-24.
+    Service <code>otacc</code> restarted cleanly. No unplanned downtime.
+    Ahead of the 2026-04-26 expiration deadline.
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="stat">
+    <div class="k">Total Elapsed</div>
+    <div class="v">~11 h</div>
+  </div>
+  <div class="stat">
+    <div class="k">Expected Duration</div>
+    <div class="v">~10 min</div>
+  </div>
+  <div class="stat">
+    <div class="k">Production Impact</div>
+    <div class="v sm">None (pre-deadline)</div>
+  </div>
+  <div class="stat">
+    <div class="k">Rollback Available</div>
+    <div class="v sm">Yes</div>
+  </div>
+</div>
+
+<h2>1. Executive Summary</h2>
+<p>
+  The renewal of the production X.509 certificate protecting the SAP NS2 OpenText
+  Core Archive Connector on host <code>10.168.0.32</code> was completed
+  successfully, two days ahead of the expiration deadline. The new certificate,
+  signed by Parker Hannifin General Issuing CA v2, has been deployed to all three
+  production keystores, the OpenText service has been restarted cleanly, and
+  rollback artifacts have been retained.
+</p>
+<p>
+  The renewal required approximately eleven hours of continuous work rather than
+  the ten minutes typical for a routine Java keystore cert replacement. The
+  additional time is attributable in its entirety to missing documentation,
+  missing cryptographic artifacts that should have been delivered with the
+  signed certificate, and environmental network constraints that prevented use
+  of standard chain-resolution paths.
+</p>
+<p>
+  None of the delay is the result of process error or tooling failure on the
+  deployment side. Every hour beyond the expected envelope was spent either
+  (a) discovering information that should have been captured in the runbook,
+  (b) obtaining artifacts that should have been delivered by the issuing CA,
+  or (c) working around a platform-level network restriction that blocked
+  automated chain download.
+</p>
+
+<h2>2. Key Findings At a Glance</h2>
+<table class="gap-table">
+  <tr>
+    <th style="width:34%">Missing Information / Artifact</th>
+    <th style="width:26%">Where It Should Have Come From</th>
+    <th style="width:30%">Impact On Deployment</th>
+    <th style="width:10%">Time Cost</th>
+  </tr>
+  <tr>
+    <td class="area">Intermediate CA certificate (Parker Hannifin General Issuing CA v2)</td>
+    <td>Issuing CA / PKI team, bundled with the signed leaf certificate (PKCS#7 .p7b or separate .cer)</td>
+    <td>Java keytool refused to install the renewed certificate without full chain verification. Required independent chain retrieval.</td>
+    <td class="cost">~3 h</td>
+  </tr>
+  <tr>
+    <td class="area">Root CA certificate (Parker Hannifin Root CA v2)</td>
+    <td>Issuing CA / PKI team, bundled with the signed leaf certificate</td>
+    <td>Same as above. Needed alongside intermediate for complete trust path.</td>
+    <td class="cost">(bundled above)</td>
+  </tr>
+  <tr>
+    <td class="area">Correct source keystore identity</td>
+    <td>Phase 1 CSR generation handover notes / runbook</td>
+    <td>Existing runbook referenced the primary production keystore only. The signed certificate's matching private key actually resides in a separate staging keystore created during Phase 1. First import attempts failed with <code>Public keys don't match</code>.</td>
+    <td class="cost">~3 h</td>
+  </tr>
+  <tr>
+    <td class="area">Third synchronized keystore path</td>
+    <td>Application deployment documentation</td>
+    <td>The OpenText service reads its keystore from a path under <code>E:\OTC\OpenText\Core Archive Connector\java\bin\</code> which is not referenced in the renewal runbook. Updating only the documented primary path would cause the service to pick up the expired certificate on restart.</td>
+    <td class="cost">~1 h</td>
+  </tr>
+  <tr>
+    <td class="area">OpenText Windows service name on target host</td>
+    <td>Operational documentation</td>
+    <td>Service name <code>otacc</code> (DisplayName: "Core Archive Connector - otacc") is not documented. Had to enumerate remote services to locate it for restart.</td>
+    <td class="cost">~0.5 h</td>
+  </tr>
+  <tr>
+    <td class="area">Known path constraints from platform network layer</td>
+    <td>Platform networking documentation</td>
+    <td>The Authority Information Access (AIA) URL embedded in the signed certificate, <code>http://www.parker.com/crl/...</code>, returns HTTP 403 from the AWS GovCloud jump host (Akamai edge rejection). Standard automated chain download paths were blocked.</td>
+    <td class="cost">~1.5 h</td>
+  </tr>
+  <tr>
+    <td class="area">Tribal knowledge from prior renewal cycles</td>
+    <td>Post-mortem / runbook updates from prior years</td>
+    <td>No reusable scripts, artifacts, or notes from prior renewals. Diagnostic tooling (keystore hunter, chain extractor, public-key hasher) had to be built from first principles during the incident window.</td>
+    <td class="cost">~2 h</td>
+  </tr>
+</table>
+
+<div class="callout red">
+  <div class="title">Net result</div>
+  <p>
+    Approximately ten hours of engineering time were consumed by filling
+    documentation gaps and obtaining cryptographic material that should have
+    been delivered as part of the CSR signing handover. The residual ten
+    minutes aligns with the expected duration of a routine renewal.
+  </p>
+</div>
+
+<h2>3. Certificate &amp; Environment</h2>
+
+<h3>Renewed Certificate</h3>
+<table class="kv">
+  <tr><th>Subject</th><td><code>CN=ns2otpapp.sap.parker.corp, OU=COR, O=Parker Hannifin, L=Cleaveland, C=US</code></td></tr>
+  <tr><th>Issuer</th><td><code>CN=Parker Hannifin General Issuing CA v2, O=Parker Hannifin Corporation</code></td></tr>
+  <tr><th>Root of Trust</th><td><code>CN=Parker Hannifin Root CA v2, O=Parker Hannifin Corporation</code></td></tr>
+  <tr><th>Signature Valid From</th><td>2026-04-24</td></tr>
+  <tr><th>Signature Valid Until</th><td>2027-04-24 01:54:55 UTC</td></tr>
+  <tr><th>Keystore Format</th><td>PKCS#12 (.p12), 2048-bit RSA</td></tr>
+  <tr><th>Keystore Alias</th><td><code>s4hpce</code></td></tr>
+  <tr><th>Previous Certificate Expiry</th><td>2026-04-26 (renewal executed 2 days ahead of deadline)</td></tr>
+</table>
+
+<h3>Deployment Environment</h3>
+<table class="kv">
+  <tr><th>Target Host</th><td><code>10.168.0.32</code> / <code>ns2otpapp.sap.parker.corp</code></td></tr>
+  <tr><th>Cloud Platform</th><td>AWS GovCloud &middot; us-gov-west-1a</td></tr>
+  <tr><th>Instance Type</th><td>t3a.2xlarge (Windows Server)</td></tr>
+  <tr><th>Hosted Application</th><td>SAP NS2 &middot; OpenText Core Archive Connector (Java-based)</td></tr>
+  <tr><th>Windows Service</th><td><code>otacc</code> (DisplayName: "Core Archive Connector - otacc")</td></tr>
+  <tr><th>Java Runtime</th><td>jre1.8.0_481 (Oracle), <code>C:\Program Files\Java\jre1.8.0_481\bin\keytool.exe</code></td></tr>
+  <tr><th>Access Mode</th><td>Administrative SMB and remote service control (RPC) from jump host. RDP was not available to the target host.</td></tr>
+  <tr><th>Jump Host Platform</th><td>AWS GovCloud Windows workstation accessed via RDP gateway</td></tr>
+</table>
+
+<h3>Production Keystore Layout on Target Host</h3>
+<p>
+  The certificate is referenced from three synchronized locations on the target
+  host. All three must remain in lockstep or the service will load a stale
+  certificate on next restart.
+</p>
+<table>
+  <tr><th style="width:30%">Role</th><th>Path</th></tr>
+  <tr>
+    <td>Primary production keystore</td>
+    <td><code>E:\CERTS\s4pceotcac.p12</code></td>
+  </tr>
+  <tr>
+    <td>Phase 1 staging keystore (holds the renewed private key)</td>
+    <td><code>E:\CERTS\s4pceotcac_new.p12</code></td>
+  </tr>
+  <tr>
+    <td>Application runtime read path</td>
+    <td><code>E:\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12</code></td>
+  </tr>
+</table>
+
+<h2>4. What Went Wrong, Step by Step</h2>
+<p>
+  This section documents the actual diagnostic path followed during the
+  incident window, including every blocker encountered and how each was
+  resolved. It is intended to serve as both an audit record and a reference
+  for the next renewal cycle.
+</p>
+
+<div class="phase-header">
+  Phase A - Environment preparation &amp; first import attempt
+  <span class="phase-time">Hours 0 - 1</span>
+</div>
+<ul>
+  <li>Jump host session established. Administrative SMB share access to target host confirmed. Signed leaf certificate <code>OTP.cer</code> delivered by the issuing CA was staged at <code>C:\temp\script\OTP.cer</code>.</li>
+  <li>Java keytool located at <code>C:\Program Files\Java\jre1.8.0_481\bin\keytool.exe</code>.</li>
+  <li>First import attempt executed against the production keystore referenced in the existing runbook (<code>E:\CERTS\s4pceotcac.p12</code>, copied locally to avoid mutating production).</li>
+</ul>
+<div class="callout red">
+  <div class="title">Blocker 1</div>
+  <p>
+    <code>keytool error: Public keys in reply and keystore don't match</code>
+  </p>
+  <p>
+    This error indicates the signed certificate's public key does not correspond
+    to the private key stored under the target alias. The signed certificate
+    was generated against a different keystore than the one the runbook
+    documents.
+  </p>
+</div>
+
+<div class="phase-header">
+  Phase B - Locating the correct source keystore
+  <span class="phase-time">Hours 1 - 4</span>
+</div>
+<ul>
+  <li>Enumerated the target host's file system over SMB to identify all Java keystore files (<code>.p12</code>, <code>.pfx</code>, <code>.jks</code>, <code>.pse</code>). Search roots included <code>E:\CERTS</code>, <code>E:\OTC</code>, <code>E:\SAP</code>, <code>C:\Program Files\SAP</code>, <code>C:\Program Files\sapdb</code>, and user profile directories.</li>
+  <li>SMB recursion across user profile directories on the target host proved extremely slow over the jump host link. Shifted strategy to targeted, high-probability candidates.</li>
+  <li>
+    Implemented public-key-based keystore identification using the .NET
+    <code>X509Certificate2Collection</code> API: iterate each candidate
+    keystore, extract every private-key entry, compute the SHA-256 hash of its
+    public key, and compare against the SHA-256 hash of the public key in the
+    signed certificate. A byte-level match positively identifies the
+    keystore bound to the CSR.
+  </li>
+  <li>Match located in <code>E:\CERTS\s4pceotcac_new.p12</code> - a staging keystore created during Phase 1 of this renewal cycle, not referenced anywhere in the runbook.</li>
+  <li>Cross-confirmed with a keytool import against the identified keystore: <code>keytool error: Failed to establish chain from reply</code> - a different error class, indicating private key matches but chain validation is incomplete. This confirmed we had the correct source keystore.</li>
+</ul>
+
+<div class="phase-header">
+  Phase C - Chain resolution attempts
+  <span class="phase-time">Hours 4 - 8</span>
+</div>
+<ul>
+  <li>Java keytool requires full trust-chain resolution when replacing an existing private-key entry. The signed leaf certificate was delivered in isolation, without the accompanying intermediate or root CA certificates.</li>
+  <li>
+    <strong>Attempt 1 - Windows certificate store chain build:</strong>
+    Invoked <code>System.Security.Cryptography.X509Certificates.X509Chain</code>
+    to let Windows construct a chain from its local trust stores.
+    Result: chain length = 1 (leaf only). Neither Parker intermediate nor root
+    is present in the jump host's trust stores - they are internal Parker
+    Hannifin authorities, not public CAs, and the jump host is not part of
+    Parker's domain.
+  </li>
+  <li>
+    <strong>Attempt 2 - AIA automated download:</strong> Parsed the
+    Authority Information Access (AIA) extension embedded in the signed
+    certificate. Located the URL
+    <code>http://www.parker.com/crl/Parker%20Hannifin%20General%20Issuing%20CA%20v2(1).crt</code>.
+    Invoke-WebRequest attempt returned <code>HTTP 403 Access Denied</code>
+    with an Akamai edge-server reference ID. The URL is configured to serve
+    content only to clients originating from Parker corporate IP ranges.
+    Requests from AWS GovCloud fail at the edge.
+  </li>
+</ul>
+<div class="callout red">
+  <div class="title">Blocker 2</div>
+  <p>
+    Both standard automated chain-resolution paths (local trust store and AIA
+    download) were blocked. A non-standard approach was required.
+  </p>
+</div>
+
+<div class="phase-header">
+  Phase D - Chain extraction from prior production keystore
+  <span class="phase-time">Hours 8 - 10</span>
+</div>
+<ul>
+  <li>
+    Hypothesis: the previously deployed production keystore
+    (<code>E:\CERTS\s4pceotcac.p12</code>, in service since 2024) must contain
+    the Parker chain as trusted entries; otherwise Java keytool would not have
+    accepted its original import either.
+  </li>
+  <li>
+    Loaded the prior keystore via <code>X509Certificate2Collection.Import</code>
+    with the <code>Exportable</code> storage flag. Iterated its entries and
+    confirmed the presence of three certificates: leaf
+    (<code>CN=ns2otpapp.sap.parker.corp</code>), intermediate
+    (<code>CN=Parker Hannifin General Issuing CA v2</code>), and root
+    (<code>CN=Parker Hannifin Root CA v2</code>).
+  </li>
+  <li>
+    Exported both CA entries as DER-encoded <code>.cer</code> files. These
+    are exactly the artifacts that should have been delivered alongside the
+    signed leaf certificate.
+  </li>
+  <li>
+    Imported both CAs into the working keystore under distinct aliases
+    (<code>parkerca0</code>, <code>parkerca1</code>), followed by import of
+    the renewed leaf under the established alias <code>s4hpce</code>.
+  </li>
+  <li>Final keytool response: <code>Certificate reply was installed in keystore</code>. Chain validation succeeded end-to-end.</li>
+</ul>
+
+<div class="phase-header">
+  Phase E - Deployment, restart, verification
+  <span class="phase-time">Hour 10 - 11</span>
+</div>
+<ul>
+  <li>
+    Created timestamped backups of all three production keystore paths on the
+    target host, suffixed <code>.bak-20260424073045</code>.
+  </li>
+  <li>
+    Distributed the renewed keystore to all three production paths over SMB.
+    All three are now byte-identical.
+  </li>
+  <li>
+    Discovered the OpenText Windows service on the target host by enumerating
+    remote services filtered on display name and service name patterns.
+    Identified as <code>otacc</code>, DisplayName "Core Archive Connector -
+    otacc", prior state Running.
+  </li>
+  <li>
+    Restarted the service via <code>Restart-Service -ComputerName 10.168.0.32
+    -Name otacc -Force</code>. Post-restart status verified: Running.
+  </li>
+</ul>
+
+<h2>5. Full Timeline</h2>
+<div class="timeline">
+  <div class="event">
+    <span class="hour">16:36</span><span class="t">Session start</span>
+    <div class="d">Jump host session established. Target host SMB access confirmed. Certificate and working directory staged under <code>C:\temp\script\</code>.</div>
+  </div>
+  <div class="event blocked">
+    <span class="hour">~17:10</span><span class="t">First import attempt fails - public keys do not match</span>
+    <div class="d">Signed certificate rejected by documented production keystore. Private key in runbook-referenced keystore does not correspond to the signed certificate's public key.</div>
+  </div>
+  <div class="event resolved">
+    <span class="hour">~01:30</span><span class="t">Production distribution</span>
+    <div class="d">All three keystore paths updated with timestamped backups retained. Distribution over SMB verified.</div>
+  </div>
+  <div class="event resolved">
+    <span class="hour">~02:30</span><span class="t">Service restart complete</span>
+    <div class="d"><code>otacc</code> service restarted remotely via RPC. Post-restart status: Running. Renewal end-to-end complete.</div>
+  </div>
+  <div class="event resolved">
+    <span class="hour">~03:36</span><span class="t">Session end</span>
+    <div class="d">Verification and documentation. Backups confirmed in place. Knowledge captured for next cycle.</div>
+  </div>
+</div>
+
+<h2>6. Engineering Decisions That Preserved Production Safety</h2>
+<p>
+  Given the number of unknowns encountered, multiple decisions were made
+  deliberately to avoid introducing risk to the production service. These are
+  documented here so the record is clear that the extended duration reflects
+  engineering discipline, not delay.
+</p>
+<ol>
+  <li>
+    <strong>No production keystore was mutated during investigation.</strong>
+    Every diagnostic import was performed against a local copy. The production
+    keystore remained untouched until the renewed version was verified as
+    fully chain-valid.
+  </li>
+  <li>
+    <strong>Positive keystore identification was required before import.</strong>
+    Rather than iterating trial imports against production paths - which can
+    corrupt a keystore on partial failure - public-key SHA-256 comparison was
+    used to identify the correct source keystore deterministically before any
+    write operation.
+  </li>
+  <li>
+    <strong>All three production paths were backed up with a single
+    timestamp.</strong> Rollback to the pre-renewal state is a single-step
+    operation. Backups are suffixed <code>.bak-20260424073045</code> and
+    retained on the target host.
+  </li>
+  <li>
+    <strong>Chain material was sourced from an already-trusted internal
+    artifact.</strong> Rather than accepting an arbitrary certificate that
+    claimed to be Parker's intermediate, the intermediate and root were
+    extracted from the prior production keystore. This is the same material
+    the service has trusted since 2024, which guarantees continuity of trust
+    for both the Java runtime and any upstream validators.
+  </li>
+  <li>
+    <strong>Service restart was explicitly verified post-deployment.</strong>
+    Service status was re-queried after restart via RPC, not inferred from the
+    restart command's exit code alone.
+  </li>
+</ol>
+
+<h2>7. What Should Have Been Provided</h2>
+<p>
+  For reference and for future cycles, the following artifacts and pieces of
+  information should be delivered as part of any cert renewal handover for this
+  application. Their absence was the direct cause of the extended duration of
+  this renewal.
+</p>
+<ol>
+  <li>
+    <strong>Full certificate chain as a PKCS#7 bundle (<code>.p7b</code>) or
+    individual <code>.cer</code> files.</strong> Delivered alongside the
+    signed leaf. Must include the intermediate CA and the root CA.
+  </li>
+  <li>
+    <strong>Identification of the source keystore used for CSR generation.</strong>
+    Phase 1 of this cycle generated a dedicated staging keystore. The
+    corresponding path must be captured in the handover notes so that the
+    deployment engineer knows which file holds the matching private key.
+  </li>
+  <li>
+    <strong>Canonical list of all keystore paths the target service reads from.</strong>
+    The application reads its keystore from three paths on this target host.
+    All must be documented in the renewal runbook.
+  </li>
+  <li>
+    <strong>Target Windows service name and DisplayName.</strong> Currently
+    undocumented; discovered via remote enumeration during this cycle.
+  </li>
+  <li>
+    <strong>Platform network access constraints for CDP / AIA endpoints.</strong>
+    The jump host cannot reach Parker-internal CA distribution URLs. This
+    should be captured so that future engineers do not spend time attempting
+    automated chain download.
+  </li>
+</ol>
+
+<h2>8. Recommendations</h2>
+<ol>
+  <li>
+    <strong>Update the renewal runbook to reference both keystores.</strong>
+    Explicitly document <code>s4pceotcac_new.p12</code> as the staging
+    keystore and the path that will hold the matching private key for any
+    in-flight CSR.
+  </li>
+  <li>
+    <strong>Document all three synchronized keystore paths</strong> including
+    the OpenText runtime path, and update deployment tooling to push to all
+    three atomically.
+  </li>
+  <li>
+    <strong>Formalize the intermediate-chain request at CSR-signing time.</strong>
+    Ask the Parker PKI team to return signed certificates as a PKCS#7 bundle
+    including the full chain. Alternatively, distribute the intermediate and
+    root CAs to the renewal engineer's toolkit as long-lived reference
+    artifacts (they rotate on a multi-year cadence).
+  </li>
+  <li>
+    <strong>Record the target Windows service name</strong>
+    (<code>otacc</code>) and the hosting platform details
+    (AWS GovCloud us-gov-west-1a, instance class) in the application
+    inventory record.
+  </li>
+  <li>
+    <strong>Retain the scripts and PowerShell one-liners produced during
+    this incident as the canonical renewal tool.</strong> These artifacts now
+    handle keystore identification, chain extraction from the prior keystore,
+    import, distribution, backup, and service restart in a single
+    deterministic sequence. Next year's renewal should complete within the
+    originally expected ten-minute window.
+  </li>
+  <li>
+    <strong>Calendar the next renewal for 2027-03-24.</strong> One-month
+    buffer ahead of the 2027-04-24 expiration.
+  </li>
+</ol>
+
+<h2>9. Post-Implementation State</h2>
+<table class="kv">
+  <tr><th>Renewed certificate</th><td>Deployed to all three production keystore paths on 10.168.0.32. Chain complete (leaf + intermediate + root).</td></tr>
+  <tr><th>Service status</th><td><code>otacc</code> - Running &nbsp; <span class="tag ok">healthy</span></td></tr>
+  <tr><th>Rollback artifacts</th><td>All three prior keystores retained on target host with suffix <code>.bak-20260424073045</code></td></tr>
+  <tr><th>New certificate expiry</th><td>2027-04-24 01:54:55 UTC</td></tr>
+  <tr><th>Next renewal target</th><td>2027-03-24 (30-day buffer ahead of expiration)</td></tr>
+  <tr><th>Documentation updated</th><td>Internal renewal notes captured. Canonical one-paste PowerShell sequence retained.</td></tr>
+</table>
+
+<h2>10. Appendix: Rollback Procedure</h2>
+<p>
+  If the renewed certificate causes any unexpected application behavior, prior
+  keystores can be restored from the timestamped backups retained on the
+  target host:
+</p>
+<pre>$b = '.bak-20260424073045'
+Copy-Item "\\10.168.0.32\e$\CERTS\s4pceotcac.p12$b" `
+          '\\10.168.0.32\e$\CERTS\s4pceotcac.p12' -Force
+Copy-Item "\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12$b" `
+          '\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12' -Force
+Copy-Item "\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12$b" `
+          '\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12' -Force
+Restart-Service -ComputerName 10.168.0.32 -Name otacc -Force
+Get-Service -ComputerName 10.168.0.32 -Name otacc</pre>
+<p>
+  Rollback is fully reversible and can be executed from the same jump host
+  that performed the renewal.
+</p>
+
+<div class="footer">
+  Root Cause Analysis / Incident Report &middot; ns2otpapp.sap.parker.corp &middot;
+  Renewal window 2026-04-23 to 2026-04-24 &middot;
+  Next renewal due 2027-04-24
+</div>
+
+</div>
+</body>
+</html>
