@@ -1,0 +1,26 @@
+$s=Get-Date -Format 'yyyyMMddHHmmss'
+$certs='\\10.168.0.32\e$\CERTS\s4pceotcac.p12'
+$certsNew='\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12'
+$otc='\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12'
+$src='C:\temp\script\final.p12'
+
+Copy-Item $certs    "$certs.bak-$s"    -Force
+Copy-Item $certsNew "$certsNew.bak-$s" -Force
+Copy-Item $otc      "$otc.bak-$s"      -Force
+Copy-Item $src $certs    -Force
+Copy-Item $src $certsNew -Force
+Copy-Item $src $otc      -Force
+Write-Host "Pushed to all 3 paths. Backups saved with stamp $s." -ForegroundColor Green
+
+Write-Host "Discovering OpenText service on 10.168.0.32..." -ForegroundColor Cyan
+$svc = Get-Service -ComputerName 10.168.0.32 | Where-Object { $_.DisplayName -like '*OpenText*' -or $_.DisplayName -like '*Archive*' -or $_.Name -like '*otcac*' }
+$svc | Format-Table Name,DisplayName,Status -AutoSize
+
+if($svc){
+  Write-Host "Restarting $($svc.Name)..." -ForegroundColor Yellow
+  Restart-Service -InputObject $svc -Force
+  Start-Sleep 4
+  Get-Service -ComputerName 10.168.0.32 -Name $svc.Name | Format-Table Name,Status
+} else {
+  Write-Host "No matching service found. Ask SAP admin to restart the OpenText Archive service on 10.168.0.32." -ForegroundColor Yellow
+}
