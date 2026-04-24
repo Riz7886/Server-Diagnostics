@@ -1,0 +1,49 @@
+$kt=(Get-ChildItem 'C:\Program Files\Java\*\bin\keytool.exe'|Select -First 1).FullName
+$ks='C:\temp\script\final.p12'
+$cer='C:\temp\script\OTP.cer'
+$pw='s4hpce'
+Copy-Item '\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12' $ks -Force
+Copy-Item '\\10.168.0.32\e$\CERTS\s4pceotcac.p12' 'C:\temp\script\old-ref.p12' -Force
+
+$old=New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+$old.Import('C:\temp\script\old-ref.p12',$pw,[System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+Write-Host "Old keystore holds $($old.Count) certs:" -ForegroundColor Cyan
+$exported=@()
+$i=0
+foreach($c in $old){
+  Write-Host "  [$i] $($c.Subject)"
+  if($c.Subject -like '*Parker*' -and $c.Subject -notlike '*ns2otpapp*'){
+    $f="C:\temp\script\parker-ca-$i.cer"
+    [IO.File]::WriteAllBytes($f,$c.Export('Cert'))
+    $exported+=$f
+    Write-Host "      -> exported" -ForegroundColor Green
+  }
+  $i++
+}
+
+Get-ChildItem Cert:\LocalMachine\CA,Cert:\LocalMachine\Root -ErrorAction SilentlyContinue | ?{$_.Subject -like '*Parker*'} | %{
+  $f="C:\temp\script\win-parker-$($_.Thumbprint.Substring(0,8)).cer"
+  [IO.File]::WriteAllBytes($f,$_.RawData)
+  $exported+=$f
+  Write-Host "  Win store: $($_.Subject) -> exported" -ForegroundColor Green
+}
+
+if($exported.Count -eq 0){Write-Host "!! No Parker CA found anywhere" -ForegroundColor Red}
+$a=1
+foreach($f in $exported){
+  Write-Host "Import CA: $f" -ForegroundColor Yellow
+  & $kt -importcert -trustcacerts -noprompt -alias "parkerca$a" -file $f -keystore $ks -storetype PKCS12 -storepass $pw 2>&1|Out-Host
+  $a++
+}
+Write-Host ">>> Importing leaf..." -ForegroundColor Yellow
+& $kt -importcert -trustcacerts -noprompt -alias s4hpce -file $cer -keystore $ks -storetype PKCS12 -storepass $pw 2>&1|Out-Host
+
+----------------------------------------------------------------------------------
+
+
+$s=Get-Date -Format 'yyyyMMddHHmmss'
+Copy-Item '\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12' "\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12.bak-$s" -Force
+Copy-Item '\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12' "\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12.bak-$s" -Force
+Copy-Item 'C:\temp\script\final.p12' '\\10.168.0.32\e$\CERTS\s4pceotcac_new.p12' -Force
+Copy-Item 'C:\temp\script\final.p12' '\\10.168.0.32\e$\OTC\OpenText\Core Archive Connector\java\bin\s4pceotcac.p12' -Force
+Write-Host "Pushed. Now restart OpenText service on 10.168.0.32." -ForegroundColor Green
